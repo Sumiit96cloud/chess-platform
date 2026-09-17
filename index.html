@@ -1,368 +1,293 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-  <title>Chess Platform</title>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #0b1020;
-      color: white;
-      font-family: Arial, sans-serif;
-      min-height: 100%;
-    }
-
-    body {
-      overflow-x: hidden;
-    }
-
-    header {
-      text-align: center;
-      padding: 18px 10px;
-      background: #080d1a;
-      border-bottom: 1px solid #20283a;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 25px;
-      letter-spacing: .5px;
-    }
-
-    header p {
-      margin: 5px 0 0;
-      color: #8993a8;
-      font-size: 13px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 1050px;
-      margin: auto;
-      padding: 18px;
-    }
-
-    .controls {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 18px;
-    }
-
-    select,
-    button {
-      height: 42px;
-      border: 1px solid #30394d;
-      border-radius: 9px;
-      padding: 0 14px;
-      font-size: 14px;
-      color: white;
-      background: #171e2e;
-      outline: none;
-    }
-
-    button {
-      background: #315bea;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:active {
-      transform: scale(.97);
-    }
-
-    .game-area {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 22px;
-    }
-
-    /*
-      FIXED BOARD
-      The board is always square.
-      Each square is exactly 1/8 of the board.
-    */
-
-    .board-container {
-      width: min(88vw, 560px);
-      min-width: 320px;
-      flex-shrink: 0;
-    }
-
-    #board {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      grid-template-rows: repeat(8, 1fr);
-      border: 5px solid #151c2c;
-      border-radius: 5px;
-      overflow: hidden;
-      box-shadow:
-        0 15px 45px rgba(0,0,0,.45),
-        0 0 0 1px #3b4355;
-      touch-action: none;
-    }
-
-    .square {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      touch-action: none;
-    }
-
-    .light {
-      background: #f0d9b5;
-    }
-
-    .dark {
-      background: #b58863;
-    }
-
-    /*
-      PIECES
-    */
-
-    .piece {
-      width: 90%;
-      height: 90%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      font-family:
-        "Arial Unicode MS",
-        "Segoe UI Symbol",
-        "DejaVu Sans",
-        sans-serif;
-
-      font-size: clamp(36px, 8vw, 66px);
-      line-height: 1;
-
-      user-select: none;
-      -webkit-user-select: none;
-
-      position: relative;
-      z-index: 5;
-
-      transition:
-        transform .12s ease,
-        filter .12s ease;
-    }
-
-    .white-piece {
-      color: #fff;
-      text-shadow:
-        0 2px 0 #777,
-        1px 3px 4px rgba(0,0,0,.55);
-    }
-
-    .black-piece {
-      color: #151515;
-      text-shadow:
-        0 2px 1px rgba(255,255,255,.2),
-        1px 3px 4px rgba(0,0,0,.65);
-    }
-
-    .square:hover .piece {
-      transform: scale(1.04);
-    }
-
-    /*
-      SELECTED SQUARE
-    */
-
-    .selected {
-      box-shadow: inset 0 0 0 5px #f7d046;
-    }
-
-    /*
-      LEGAL MOVE DOT
-    */
-
-    .legal::after {
-      content: "";
-      position: absolute;
-      width: 24%;
-      height: 24%;
-      border-radius: 50%;
-      background: rgba(30, 30, 30, .42);
-      z-index: 3;
-    }
-
-    /*
-      CAPTURE
-    */
-
-    .capture::after {
-      content: "";
-      position: absolute;
-      width: 78%;
-      height: 78%;
-      border-radius: 50%;
-      border: 5px solid rgba(180, 35, 35, .65);
-      z-index: 3;
-    }
-
-    /*
-      CHECK
-    */
-
-    .check {
-      box-shadow:
-        inset 0 0 0 5px #e53935,
-        inset 0 0 25px rgba(255,0,0,.45);
-    }
-
-    /*
-      LAST MOVE
-    */
-
-    .last-move {
-      background-image:
-        linear-gradient(
-          rgba(255, 220, 60, .28),
-          rgba(255, 220, 60, .28)
-        );
-    }
-
-    /*
-      SIDE PANEL
-    */
-
-    .panel {
-      width: 310px;
-      flex-shrink: 0;
-      background: #151c2b;
-      border: 1px solid #283248;
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 12px 35px rgba(0,0,0,.25);
-    }
-
-    .status-box {
-      background: #0d1422;
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 14px;
-    }
-
-    .status-title {
-      font-size: 12px;
-      color: #8791a6;
-      margin-bottom: 5px;
-    }
-
-    #status {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .history {
-      background: #0d1422;
-      border-radius: 10px;
-      padding: 13px;
-    }
-
-    .history h3 {
-      margin: 0 0 10px;
-      font-size: 15px;
-    }
-
-    #moves {
-      max-height: 310px;
-      overflow-y: auto;
-    }
-
-    .move-row {
-      display: grid;
-      grid-template-columns: 35px 1fr 1fr;
-      padding: 7px 5px;
-      border-bottom: 1px solid #20293a;
-      font-size: 14px;
-    }
-
-    .move-number {
-      color: #737e95;
-    }
-
-    .empty {
-      color: #6f7a90;
-      font-size: 13px;
-    }
-
-    /*
-      DRAGGING
-    */
-
-    .dragging {
-      opacity: .45;
-      transform: scale(1.08);
-    }
-
-    /*
-      MOBILE
-    */
-
-    @media (max-width: 760px) {
-
-      .container {
-        padding: 12px 8px 25px;
-      }
-
-      .game-area {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .board-container {
-        width: min(94vw, 560px);
-        min-width: 0;
-      }
-
-      .panel {
-        width: min(94vw, 560px);
-      }
-
-      #moves {
-        max-height: 180px;
-      }
-    }
-
-    @media (max-width: 380px) {
-
-      header h1 {
-        font-size: 21px;
-      }
-
-      .board-container {
-        width: 96vw;
-      }
-
-      .piece {
-        font-size: 39px;
-      }
-
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>Chess Platform</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#0b1020;
+  color:white;
+  font-family:Arial,sans-serif;
+  overflow-x:hidden;
+}
+
+header{
+  text-align:center;
+  padding:18px 10px;
+  background:#080d19;
+}
+
+header h1{
+  margin:0;
+  font-size:25px;
+}
+
+header p{
+  margin:5px 0 0;
+  color:#8993a8;
+  font-size:13px;
+}
+
+.container{
+  max-width:1050px;
+  margin:auto;
+  padding:16px;
+}
+
+.controls{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:16px;
+  flex-wrap:wrap;
+}
+
+select,button{
+  height:44px;
+  border:0;
+  border-radius:9px;
+  padding:0 14px;
+  font-size:14px;
+  color:white;
+  background:#192236;
+}
+
+button{
+  background:#315bea;
+  font-weight:bold;
+}
+
+.game{
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  gap:22px;
+}
+
+.board-wrap{
+  width:min(92vw,560px);
+  flex-shrink:0;
+}
+
+#board{
+  width:100%;
+  aspect-ratio:1;
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  grid-template-rows:repeat(8,1fr);
+  border:5px solid #151c2c;
+  border-radius:6px;
+  overflow:hidden;
+  box-shadow:0 15px 45px rgba(0,0,0,.5);
+  touch-action:none;
+}
+
+.square{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+  touch-action:none;
+}
+
+.light{background:#f0d9b5}
+.dark{background:#b58863}
+
+.square.selected{
+  box-shadow:inset 0 0 0 5px #f6d54a;
+}
+
+.square.last{
+  background-image:linear-gradient(
+    rgba(255,215,55,.27),
+    rgba(255,215,55,.27)
+  );
+}
+
+.square.legal::after{
+  content:"";
+  position:absolute;
+  width:22%;
+  height:22%;
+  border-radius:50%;
+  background:rgba(20,20,20,.42);
+}
+
+.square.capture::after{
+  content:"";
+  position:absolute;
+  width:78%;
+  height:78%;
+  border-radius:50%;
+  border:5px solid rgba(190,35,35,.65);
+}
+
+.square.check{
+  box-shadow:
+    inset 0 0 0 5px #e53935,
+    inset 0 0 25px rgba(255,0,0,.45);
+}
+
+.piece{
+  width:92%;
+  height:92%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:
+    "Arial Unicode MS",
+    "Segoe UI Symbol",
+    sans-serif;
+  font-size:clamp(38px,8vw,67px);
+  line-height:1;
+  user-select:none;
+  -webkit-user-select:none;
+  position:relative;
+  z-index:5;
+  pointer-events:none;
+  transition:transform .12s ease;
+}
+
+.white-piece{
+  color:#fff;
+  text-shadow:
+    0 2px 0 #777,
+    1px 4px 5px rgba(0,0,0,.6);
+}
+
+.black-piece{
+  color:#171717;
+  text-shadow:
+    0 2px 1px rgba(255,255,255,.2),
+    1px 4px 5px rgba(0,0,0,.7);
+}
+
+/* FLOATING PIECE */
+
+.drag-piece{
+  position:fixed;
+  z-index:99999;
+  pointer-events:none;
+  width:70px;
+  height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:"Arial Unicode MS","Segoe UI Symbol",sans-serif;
+  font-size:62px;
+  line-height:1;
+  transform:translate(-50%,-50%) scale(1.12);
+  filter:drop-shadow(0 12px 8px rgba(0,0,0,.5));
+  transition:none;
+}
+
+.drag-piece.white-piece{
+  color:#fff;
+}
+
+.drag-piece.black-piece{
+  color:#111;
+}
+
+.drag-piece.release{
+  transition:
+    left .16s cubic-bezier(.2,.9,.3,1),
+    top .16s cubic-bezier(.2,.9,.3,1),
+    transform .16s ease;
+  transform:translate(-50%,-50%) scale(1);
+}
+
+.panel{
+  width:310px;
+  flex-shrink:0;
+  background:#151c2b;
+  border:1px solid #283248;
+  border-radius:14px;
+  padding:16px;
+}
+
+.status{
+  background:#0d1422;
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:14px;
+}
+
+.status small{
+  display:block;
+  color:#8791a6;
+  margin-bottom:5px;
+}
+
+#status{
+  font-size:18px;
+  font-weight:bold;
+}
+
+.history{
+  background:#0d1422;
+  border-radius:10px;
+  padding:13px;
+}
+
+.history h3{
+  margin:0 0 10px;
+  font-size:15px;
+}
+
+#moves{
+  max-height:310px;
+  overflow-y:auto;
+}
+
+.move{
+  display:grid;
+  grid-template-columns:35px 1fr 1fr;
+  padding:7px 4px;
+  border-bottom:1px solid #20293a;
+  font-size:14px;
+}
+
+.num{
+  color:#737e95;
+}
+
+.empty{
+  color:#6f7a90;
+  font-size:13px;
+}
+
+@media(max-width:760px){
+  .container{padding:10px 7px 25px}
+
+  .game{
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .board-wrap{
+    width:min(96vw,560px);
+  }
+
+  .panel{
+    width:min(96vw,560px);
+  }
+
+  #moves{
+    max-height:180px;
+  }
+}
+</style>
 </head>
 
 <body>
@@ -374,740 +299,867 @@
 
 <div class="container">
 
-  <div class="controls">
+<div class="controls">
 
-    <select id="level">
-      <option value="800">Computer • 800</option>
-      <option value="1000">Computer • 1000</option>
-      <option value="1200">Computer • 1200</option>
-      <option value="1500">Computer • 1500</option>
-      <option value="1800">Computer • 1800</option>
-      <option value="2000">Computer • 2000</option>
-      <option value="2200">Computer • 2200+</option>
-    </select>
+<select id="level">
+<option value="800">Computer • 800</option>
+<option value="1000">Computer • 1000</option>
+<option value="1200">Computer • 1200</option>
+<option value="1500">Computer • 1500</option>
+<option value="1800">Computer • 1800</option>
+<option value="2000">Computer • 2000</option>
+<option value="2200">Computer • 2200+</option>
+</select>
 
-    <button onclick="newGame()">New Game</button>
+<button id="newGame">New Game</button>
 
-  </div>
+</div>
 
-  <div class="game-area">
+<div class="game">
 
-    <div class="board-container">
-      <div id="board"></div>
-    </div>
+<div class="board-wrap">
+<div id="board"></div>
+</div>
 
-    <div class="panel">
+<div class="panel">
 
-      <div class="status-box">
-        <div class="status-title">GAME STATUS</div>
-        <div id="status">White to move</div>
-      </div>
+<div class="status">
+<small>GAME STATUS</small>
+<div id="status">White to move</div>
+</div>
 
-      <div class="history">
-        <h3>Move History</h3>
+<div class="history">
+<h3>Move History</h3>
+<div id="moves">
+<div class="empty">No moves yet</div>
+</div>
+</div>
 
-        <div id="moves">
-          <div class="empty">
-            No moves yet
-          </div>
-        </div>
+</div>
 
-      </div>
-
-    </div>
-
-  </div>
-
+</div>
 </div>
 
 <script>
 
-  let game = new Chess();
+const game = new Chess();
 
-  let selectedSquare = null;
-  let draggedSquare = null;
+const board = document.getElementById("board");
+const status = document.getElementById("status");
+const movesBox = document.getElementById("moves");
+const newGameButton = document.getElementById("newGame");
 
-  let lastMove = null;
+const files=["a","b","c","d","e","f","g","h"];
+const ranks=["8","7","6","5","4","3","2","1"];
 
-  const board = document.getElementById("board");
-  const statusText = document.getElementById("status");
-  const movesContainer = document.getElementById("moves");
+const symbols={
+  w:{p:"♙",n:"♘",b:"♗",r:"♖",q:"♕",k:"♔"},
+  b:{p:"♟",n:"♞",b:"♝",r:"♜",q:"♛",k:"♚"}
+};
 
-  const files = ["a","b","c","d","e","f","g","h"];
-  const ranks = ["8","7","6","5","4","3","2","1"];
+let selected=null;
+let lastMove=null;
 
-  const pieces = {
+let dragging=false;
+let dragFrom=null;
+let floatingPiece=null;
+let dragPieceData=null;
 
-    w: {
-      p: "♙",
-      n: "♘",
-      b: "♗",
-      r: "♖",
-      q: "♕",
-      k: "♔"
-    },
 
-    b: {
-      p: "♟",
-      n: "♞",
-      b: "♝",
-      r: "♜",
-      q: "♛",
-      k: "♚"
+/* ---------------- SOUND ---------------- */
+
+let audioContext=null;
+
+function initAudio(){
+
+  if(!audioContext){
+    audioContext=
+      new (window.AudioContext ||
+           window.webkitAudioContext)();
+  }
+
+  if(audioContext.state==="suspended"){
+    audioContext.resume();
+  }
+}
+
+function captureSound(){
+
+  try{
+
+    initAudio();
+
+    const osc=
+      audioContext.createOscillator();
+
+    const gain=
+      audioContext.createGain();
+
+    osc.type="triangle";
+
+    osc.frequency.setValueAtTime(
+      170,
+      audioContext.currentTime
+    );
+
+    osc.frequency.exponentialRampToValueAtTime(
+      75,
+      audioContext.currentTime+.09
+    );
+
+    gain.gain.setValueAtTime(
+      .0001,
+      audioContext.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .25,
+      audioContext.currentTime+.008
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .0001,
+      audioContext.currentTime+.11
+    );
+
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+
+    osc.start();
+    osc.stop(audioContext.currentTime+.12);
+
+  }catch(e){}
+
+}
+
+
+/* ---------------- BOARD ---------------- */
+
+function buildBoard(){
+
+  board.innerHTML="";
+
+  for(let r=0;r<8;r++){
+
+    for(let c=0;c<8;c++){
+
+      const name=
+        files[c]+ranks[r];
+
+      const sq=
+        document.createElement("div");
+
+      sq.className=
+        "square "+
+        ((r+c)%2===0?"light":"dark");
+
+      sq.dataset.square=name;
+
+      board.appendChild(sq);
+
     }
-
-  };
-
-
-  /*
-    CREATE BOARD
-  */
-
-  function createBoard() {
-
-    board.innerHTML = "";
-
-    for (let r = 0; r < 8; r++) {
-
-      for (let c = 0; c < 8; c++) {
-
-        const squareName =
-          files[c] + ranks[r];
-
-        const square =
-          document.createElement("div");
-
-        square.className = "square";
-
-        square.classList.add(
-          (r + c) % 2 === 0
-            ? "light"
-            : "dark"
-        );
-
-        square.dataset.square =
-          squareName;
-
-        /*
-          NORMAL TAP
-        */
-
-        square.addEventListener(
-          "click",
-          () => handleSquareClick(squareName)
-        );
-
-
-        /*
-          TOUCH DRAG
-        */
-
-        square.addEventListener(
-          "pointerdown",
-          handlePointerDown
-        );
-
-        square.addEventListener(
-          "pointerup",
-          handlePointerUp
-        );
-
-        board.appendChild(square);
-
-      }
-
-    }
-
-    renderBoard();
 
   }
 
+  render();
 
-  /*
-    DRAW PIECES
-  */
+}
 
-  function renderBoard() {
 
-    const squares =
-      document.querySelectorAll(".square");
+/* ---------------- RENDER ---------------- */
 
-    squares.forEach(square => {
+function render(){
 
-      const squareName =
-        square.dataset.square;
+  document
+    .querySelectorAll(".square")
+    .forEach(sq=>{
 
-      square.innerHTML = "";
+      const name=sq.dataset.square;
 
-      square.classList.remove(
+      sq.innerHTML="";
+
+      sq.classList.remove(
         "selected",
         "legal",
         "capture",
         "check",
-        "last-move"
+        "last"
       );
 
-      /*
-        Last move highlight
-      */
-
-      if (
+      if(
         lastMove &&
         (
-          squareName === lastMove.from ||
-          squareName === lastMove.to
+          name===lastMove.from ||
+          name===lastMove.to
         )
-      ) {
-        square.classList.add("last-move");
+      ){
+        sq.classList.add("last");
       }
 
+      const piece=game.get(name);
 
-      const piece =
-        game.get(squareName);
+      if(piece){
 
-      if (piece) {
+        const el=
+          document.createElement("div");
 
-        const pieceElement =
-          document.createElement("span");
+        el.className=
+          "piece "+
+          (piece.color==="w"
+            ?"white-piece"
+            :"black-piece");
 
-        pieceElement.classList.add("piece");
+        el.textContent=
+          symbols[piece.color][piece.type];
 
-        pieceElement.classList.add(
-          piece.color === "w"
-            ? "white-piece"
-            : "black-piece"
-        );
-
-        pieceElement.textContent =
-          pieces[piece.color][piece.type];
-
-        /*
-          Drag support
-        */
-
-        pieceElement.addEventListener(
-          "pointerdown",
-          function(event) {
-
-            if (
-              piece.color !== game.turn() ||
-              game.game_over()
-            ) {
-              return;
-            }
-
-            event.stopPropagation();
-
-            draggedSquare =
-              squareName;
-
-            selectedSquare =
-              squareName;
-
-            pieceElement.classList.add(
-              "dragging"
-            );
-
-            renderBoard();
-
-          }
-        );
-
-        square.appendChild(pieceElement);
+        sq.appendChild(el);
 
       }
 
     });
 
 
-    /*
-      Selected square
-    */
+  if(selected){
 
-    if (selectedSquare) {
+    const selectedSq=
+      document.querySelector(
+        `[data-square="${selected}"]`
+      );
 
-      const selected =
+    if(selectedSq)
+      selectedSq.classList.add("selected");
+
+    game.moves({
+      square:selected,
+      verbose:true
+    }).forEach(move=>{
+
+      const target=
         document.querySelector(
-          `[data-square="${selectedSquare}"]`
+          `[data-square="${move.to}"]`
         );
 
-      if (selected) {
-        selected.classList.add("selected");
-      }
+      if(!target)return;
+
+      target.classList.add(
+        move.captured
+          ?"capture"
+          :"legal"
+      );
+
+    });
+
+  }
 
 
-      const legalMoves =
-        game.moves({
-          square: selectedSquare,
-          verbose: true
-        });
+  if(game.in_check()){
 
+    const color=game.turn();
 
-      legalMoves.forEach(move => {
+    files.forEach(file=>{
+      ranks.forEach(rank=>{
 
-        const target =
-          document.querySelector(
-            `[data-square="${move.to}"]`
-          );
+        const name=file+rank;
+        const p=game.get(name);
 
-        if (!target) return;
+        if(
+          p &&
+          p.type==="k" &&
+          p.color===color
+        ){
 
-        if (move.captured) {
-          target.classList.add("capture");
-        } else {
-          target.classList.add("legal");
+          const king=
+            document.querySelector(
+              `[data-square="${name}"]`
+            );
+
+          if(king)
+            king.classList.add("check");
+
         }
 
       });
-
-    }
-
-
-    /*
-      Check highlight
-    */
-
-    if (game.in_check()) {
-
-      const kingColor =
-        game.turn();
-
-      files.forEach(file => {
-
-        ranks.forEach(rank => {
-
-          const squareName =
-            file + rank;
-
-          const piece =
-            game.get(squareName);
-
-          if (
-            piece &&
-            piece.type === "k" &&
-            piece.color === kingColor
-          ) {
-
-            const kingSquare =
-              document.querySelector(
-                `[data-square="${squareName}"]`
-              );
-
-            if (kingSquare) {
-              kingSquare.classList.add("check");
-            }
-
-          }
-
-        });
-
-      });
-
-    }
-
-
-    updateStatus();
-    updateHistory();
+    });
 
   }
 
+  updateStatus();
+  updateHistory();
 
-  /*
-    TAP / CLICK
-  */
-
-  function handleSquareClick(square) {
-
-    if (game.game_over()) {
-      return;
-    }
+}
 
 
-    /*
-      If a piece is selected,
-      try to move it.
-    */
+/* ---------------- POINTER HELPERS ---------------- */
 
-    if (selectedSquare) {
+function getSquareFromPoint(x,y){
 
-      if (
-        tryMove(
-          selectedSquare,
-          square
-        )
-      ) {
+  const rect=
+    board.getBoundingClientRect();
 
-        selectedSquare = null;
-        renderBoard();
-        return;
-
-      }
-
-
-      /*
-        Select another own piece
-      */
-
-      const piece =
-        game.get(square);
-
-      if (
-        piece &&
-        piece.color === game.turn()
-      ) {
-
-        selectedSquare = square;
-        renderBoard();
-        return;
-
-      }
-
-
-      selectedSquare = null;
-      renderBoard();
-
-      return;
-
-    }
-
-
-    /*
-      Select piece
-    */
-
-    const piece =
-      game.get(square);
-
-    if (!piece) return;
-
-    if (
-      piece.color !== game.turn()
-    ) {
-      return;
-    }
-
-    selectedSquare = square;
-
-    renderBoard();
-
+  if(
+    x<rect.left ||
+    x>rect.right ||
+    y<rect.top ||
+    y>rect.bottom
+  ){
+    return null;
   }
 
+  const size=rect.width/8;
 
-  /*
-    POINTER DOWN
-  */
+  const col=
+    Math.floor((x-rect.left)/size);
 
-  function handlePointerDown(event) {
+  const row=
+    Math.floor((y-rect.top)/size);
 
-    const square =
-      event.currentTarget.dataset.square;
-
-    const piece =
-      game.get(square);
-
-    if (
-      !piece ||
-      piece.color !== game.turn() ||
-      game.game_over()
-    ) {
-      return;
-    }
-
-    draggedSquare = square;
-    selectedSquare = square;
-
-    renderBoard();
-
+  if(
+    col<0 || col>7 ||
+    row<0 || row>7
+  ){
+    return null;
   }
 
+  return files[col]+ranks[row];
+
+}
+
+
+/* ---------------- FLOATING PIECE ---------------- */
+
+function createFloatingPiece(piece,x,y){
+
+  floatingPiece=
+    document.createElement("div");
+
+  floatingPiece.className=
+    "drag-piece "+
+    (piece.color==="w"
+      ?"white-piece"
+      :"black-piece");
+
+  floatingPiece.textContent=
+    symbols[piece.color][piece.type];
+
+  floatingPiece.style.left=x+"px";
+  floatingPiece.style.top=y+"px";
+
+  document.body.appendChild(
+    floatingPiece
+  );
+
+}
+
+
+/* ---------------- START DRAG ---------------- */
+
+function startDrag(square,event){
+
+  if(game.game_over())return;
+
+  const piece=game.get(square);
+
+  if(!piece)return;
+
+  if(piece.color!==game.turn())
+    return;
+
+  event.preventDefault();
+
+  initAudio();
+
+  dragging=true;
+  dragFrom=square;
+  dragPieceData=piece;
+  selected=square;
 
   /*
-    POINTER UP
+    Hide original piece.
   */
 
-  function handlePointerUp(event) {
+  const original=
+    document.querySelector(
+      `[data-square="${square}"] .piece`
+    );
 
-    if (!draggedSquare) {
-      return;
-    }
+  if(original)
+    original.style.visibility="hidden";
 
-    const targetSquare =
-      event.currentTarget.dataset.square;
+  createFloatingPiece(
+    piece,
+    event.clientX,
+    event.clientY
+  );
 
-    const from =
-      draggedSquare;
-
-    draggedSquare = null;
-
-    if (
-      tryMove(
-        from,
-        targetSquare
-      )
-    ) {
-
-      selectedSquare = null;
-
-    } else {
-
-      /*
-        If failed, keep selected
-        so user can tap destination.
-      */
-
-      selectedSquare = from;
-
-    }
-
-    renderBoard();
-
-  }
-
+  render();
 
   /*
-    MAKE LEGAL MOVE
+    render() recreated original piece,
+    so hide it again.
   */
 
-  function tryMove(from, to) {
+  const originalAgain=
+    document.querySelector(
+      `[data-square="${square}"] .piece`
+    );
 
-    if (
-      !from ||
-      !to ||
-      from === to
-    ) {
-      return false;
-    }
+  if(originalAgain)
+    originalAgain.style.visibility="hidden";
 
-
-    const piece =
-      game.get(from);
-
-    if (!piece) {
-      return false;
-    }
+}
 
 
-    /*
-      Promotion
-    */
+/* ---------------- DRAG MOVE ---------------- */
 
-    let promotion = "q";
+function moveDrag(event){
 
-    if (
-      piece.type === "p" &&
-      (
-        to[1] === "8" ||
-        to[1] === "1"
-      )
-    ) {
+  if(!dragging || !floatingPiece)
+    return;
 
-      let answer =
-        prompt(
-          "Promote to:\n\n" +
-          "q = Queen\n" +
-          "r = Rook\n" +
-          "b = Bishop\n" +
-          "n = Knight"
+  event.preventDefault();
+
+  floatingPiece.style.left=
+    event.clientX+"px";
+
+  floatingPiece.style.top=
+    event.clientY+"px";
+
+}
+
+
+/* ---------------- RELEASE ---------------- */
+
+function endDrag(event){
+
+  if(!dragging)
+    return;
+
+  event.preventDefault();
+
+  const from=dragFrom;
+
+  const to=
+    getSquareFromPoint(
+      event.clientX,
+      event.clientY
+    );
+
+  dragging=false;
+  dragFrom=null;
+
+  const piece=dragPieceData;
+  dragPieceData=null;
+
+  /*
+    Invalid drop:
+    animate piece back to original square.
+  */
+
+  if(!to || !tryMove(from,to)){
+
+    if(floatingPiece){
+
+      const originalSquare=
+        document.querySelector(
+          `[data-square="${from}"]`
         );
 
-      answer =
-        (answer || "q").toLowerCase();
+      if(originalSquare){
 
-      if (
-        !["q","r","b","n"]
-          .includes(answer)
-      ) {
-        answer = "q";
+        const rect=
+          originalSquare.getBoundingClientRect();
+
+        floatingPiece.classList.add(
+          "release"
+        );
+
+        floatingPiece.style.left=
+          (rect.left+rect.width/2)+"px";
+
+        floatingPiece.style.top=
+          (rect.top+rect.height/2)+"px";
+
+        setTimeout(()=>{
+          removeFloating();
+          selected=from;
+          render();
+        },170);
+
+        return;
+
       }
 
-      promotion = answer;
-
     }
 
-
-    const move =
-      game.move({
-        from: from,
-        to: to,
-        promotion: promotion
-      });
-
-
-    if (!move) {
-      return false;
-    }
-
-
-    lastMove = {
-      from: from,
-      to: to
-    };
-
-
-    return true;
+    removeFloating();
+    selected=null;
+    render();
+    return;
 
   }
 
 
   /*
-    STATUS
+    Valid move:
+    animate floating piece from
+    current position to target square.
   */
 
-  function updateStatus() {
+  const targetSquare=
+    document.querySelector(
+      `[data-square="${to}"]`
+    );
 
-    if (game.in_checkmate()) {
+  if(floatingPiece && targetSquare){
 
-      const winner =
-        game.turn() === "w"
-          ? "Black"
-          : "White";
+    const rect=
+      targetSquare.getBoundingClientRect();
 
-      statusText.textContent =
-        "♛ Checkmate — " +
-        winner +
-        " wins";
+    floatingPiece.classList.add(
+      "release"
+    );
 
-      return;
+    floatingPiece.style.left=
+      (rect.left+rect.width/2)+"px";
 
-    }
+    floatingPiece.style.top=
+      (rect.top+rect.height/2)+"px";
 
+    setTimeout(()=>{
+      removeFloating();
+      selected=null;
+      render();
+    },170);
 
-    if (game.in_stalemate()) {
+  }else{
 
-      statusText.textContent =
-        "½–½ Stalemate";
-
-      return;
-
-    }
-
-
-    if (game.is_draw()) {
-
-      statusText.textContent =
-        "½–½ Draw";
-
-      return;
-
-    }
-
-
-    if (game.in_check()) {
-
-      statusText.textContent =
-        game.turn() === "w"
-          ? "⚠️ White is in check"
-          : "⚠️ Black is in check";
-
-      return;
-
-    }
-
-
-    statusText.textContent =
-      game.turn() === "w"
-        ? "White to move"
-        : "Black to move";
+    removeFloating();
+    selected=null;
+    render();
 
   }
 
+}
+
+
+/* ---------------- REMOVE FLOATING ---------------- */
+
+function removeFloating(){
+
+  if(floatingPiece){
+
+    floatingPiece.remove();
+    floatingPiece=null;
+
+  }
+
+}
+
+
+/* ---------------- MOVE ---------------- */
+
+function tryMove(from,to){
+
+  if(from===to)
+    return false;
+
+  const piece=game.get(from);
+
+  if(!piece)
+    return false;
+
+  let promotion="q";
+
+  if(
+    piece.type==="p" &&
+    (
+      to[1]==="8" ||
+      to[1]==="1"
+    )
+  ){
+
+    let answer=
+      prompt(
+        "Promote to:\n\n"+
+        "q = Queen\n"+
+        "r = Rook\n"+
+        "b = Bishop\n"+
+        "n = Knight"
+      );
+
+    answer=
+      (answer||"q").toLowerCase();
+
+    if(!["q","r","b","n"].includes(answer))
+      answer="q";
+
+    promotion=answer;
+
+  }
 
   /*
-    MOVE HISTORY
+    Check whether target contains
+    opponent piece BEFORE making move.
   */
 
-  function updateHistory() {
+  const captured=
+    !!game.get(to);
 
-    const history =
-      game.history();
+  const move=
+    game.move({
+      from:from,
+      to:to,
+      promotion:promotion
+    });
 
-    movesContainer.innerHTML = "";
+  if(!move)
+    return false;
+
+  lastMove={
+    from:from,
+    to:to
+  };
+
+  if(captured)
+    captureSound();
+
+  return true;
+
+}
 
 
-    if (history.length === 0) {
+/* ---------------- TAP TO MOVE ---------------- */
 
-      movesContainer.innerHTML =
-        '<div class="empty">No moves yet</div>';
+function tapSquare(square){
 
+  if(dragging)return;
+
+  if(game.game_over())
+    return;
+
+  const piece=game.get(square);
+
+  if(selected){
+
+    if(tryMove(selected,square)){
+
+      selected=null;
+      render();
       return;
 
     }
 
+    if(
+      piece &&
+      piece.color===game.turn()
+    ){
 
-    for (
-      let i = 0;
-      i < history.length;
-      i += 2
-    ) {
-
-      const row =
-        document.createElement("div");
-
-      row.className =
-        "move-row";
-
-
-      const number =
-        document.createElement("div");
-
-      number.className =
-        "move-number";
-
-      number.textContent =
-        (i / 2 + 1) + ".";
-
-
-      const white =
-        document.createElement("div");
-
-      white.textContent =
-        history[i] || "";
-
-
-      const black =
-        document.createElement("div");
-
-      black.textContent =
-        history[i + 1] || "";
-
-
-      row.appendChild(number);
-      row.appendChild(white);
-      row.appendChild(black);
-
-      movesContainer.appendChild(row);
+      selected=square;
+      render();
+      return;
 
     }
 
-
-    movesContainer.scrollTop =
-      movesContainer.scrollHeight;
+    selected=null;
+    render();
+    return;
 
   }
 
+  if(
+    piece &&
+    piece.color===game.turn()
+  ){
 
-  /*
-    NEW GAME
-  */
+    selected=square;
+    render();
 
-  function newGame() {
+  }
 
+}
+
+
+/* ---------------- EVENTS ---------------- */
+
+board.addEventListener(
+  "pointerdown",
+  event=>{
+
+    const squareElement=
+      event.target.closest(".square");
+
+    if(!squareElement)return;
+
+    startDrag(
+      squareElement.dataset.square,
+      event
+    );
+
+  },
+  {passive:false}
+);
+
+
+board.addEventListener(
+  "pointermove",
+  moveDrag,
+  {passive:false}
+);
+
+
+board.addEventListener(
+  "pointerup",
+  endDrag,
+  {passive:false}
+);
+
+
+board.addEventListener(
+  "pointercancel",
+  endDrag,
+  {passive:false}
+);
+
+
+/*
+  Normal tap.
+  Pointerup already handles drag,
+  so this handles simple taps
+  using click only when no drag happened.
+*/
+
+board.addEventListener(
+  "click",
+  event=>{
+
+    if(dragging)return;
+
+    const square=
+      event.target.closest(".square");
+
+    if(!square)return;
+
+    tapSquare(
+      square.dataset.square
+    );
+
+  }
+);
+
+
+/* ---------------- STATUS ---------------- */
+
+function updateStatus(){
+
+  if(game.in_checkmate()){
+
+    status.textContent=
+      game.turn()==="w"
+      ?"♛ Checkmate — Black wins"
+      :"♛ Checkmate — White wins";
+
+    return;
+
+  }
+
+  if(game.in_stalemate()){
+
+    status.textContent=
+      "½–½ Stalemate";
+
+    return;
+
+  }
+
+  if(game.is_draw()){
+
+    status.textContent=
+      "½–½ Draw";
+
+    return;
+
+  }
+
+  if(game.in_check()){
+
+    status.textContent=
+      game.turn()==="w"
+      ?"⚠️ White is in check"
+      :"⚠️ Black is in check";
+
+    return;
+
+  }
+
+  status.textContent=
+    game.turn()==="w"
+    ?"White to move"
+    :"Black to move";
+
+}
+
+
+/* ---------------- HISTORY ---------------- */
+
+function updateHistory(){
+
+  const history=
+    game.history();
+
+  movesBox.innerHTML="";
+
+  if(!history.length){
+
+    movesBox.innerHTML=
+      '<div class="empty">No moves yet</div>';
+
+    return;
+
+  }
+
+  for(
+    let i=0;
+    i<history.length;
+    i+=2
+  ){
+
+    const row=
+      document.createElement("div");
+
+    row.className="move";
+
+    row.innerHTML=
+      `<div class="num">${i/2+1}.</div>`+
+      `<div>${history[i]||""}</div>`+
+      `<div>${history[i+1]||""}</div>`;
+
+    movesBox.appendChild(row);
+
+  }
+
+  movesBox.scrollTop=
+    movesBox.scrollHeight;
+
+}
+
+
+/* ---------------- NEW GAME ---------------- */
+
+newGameButton.addEventListener(
+  "click",
+  ()=>{
     game.reset();
-
-    selectedSquare = null;
-    draggedSquare = null;
-    lastMove = null;
-
-    renderBoard();
-
+    selected=null;
+    lastMove=null;
+    removeFloating();
+    render();
   }
+);
 
 
-  /*
-    START
-  */
+/* ---------------- START ---------------- */
 
-  createBoard();
+buildBoard();
 
 </script>
 
