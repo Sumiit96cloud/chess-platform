@@ -2,1166 +2,1144 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>Chess Platform</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
 <style>
-*{box-sizing:border-box}
-
-body{
-  margin:0;
-  background:#0b1020;
-  color:white;
-  font-family:Arial,sans-serif;
-  overflow-x:hidden;
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
-header{
-  text-align:center;
-  padding:18px 10px;
-  background:#080d19;
+body {
+    margin: 0;
+    background: #10131a;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
 }
 
-header h1{
-  margin:0;
-  font-size:25px;
+.app {
+    width: 100%;
+    max-width: 650px;
+    padding: 18px;
 }
 
-header p{
-  margin:5px 0 0;
-  color:#8993a8;
-  font-size:13px;
+h1 {
+    text-align: center;
+    margin: 5px 0 15px;
+    font-size: 28px;
 }
 
-.container{
-  max-width:1050px;
-  margin:auto;
-  padding:16px;
+.topbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
 }
 
-.controls{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin-bottom:16px;
-  flex-wrap:wrap;
+select,
+button {
+    border: 0;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 15px;
+    cursor: pointer;
 }
 
-select,button{
-  height:44px;
-  border:0;
-  border-radius:9px;
-  padding:0 14px;
-  font-size:14px;
-  color:white;
-  background:#192236;
+select {
+    flex: 1;
+    background: #202631;
+    color: white;
 }
 
-button{
-  background:#315bea;
-  font-weight:bold;
+button {
+    background: #3b82f6;
+    color: white;
 }
 
-.game{
-  display:flex;
-  justify-content:center;
-  align-items:flex-start;
-  gap:22px;
+button:active {
+    transform: scale(.97);
 }
 
-.board-wrap{
-  width:min(92vw,560px);
-  flex-shrink:0;
+.status {
+    text-align: center;
+    min-height: 25px;
+    margin-bottom: 10px;
+    color: #cbd5e1;
+    font-size: 15px;
 }
 
-#board{
-  width:100%;
-  aspect-ratio:1;
-  display:grid;
-  grid-template-columns:repeat(8,1fr);
-  grid-template-rows:repeat(8,1fr);
-  border:5px solid #151c2c;
-  border-radius:6px;
-  overflow:hidden;
-  box-shadow:0 15px 45px rgba(0,0,0,.5);
-  touch-action:none;
+.board {
+    width: min(92vw, 600px);
+    aspect-ratio: 1 / 1;
+    margin: auto;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    border-radius: 10px;
+    overflow: hidden;
+    touch-action: none;
+    box-shadow: 0 12px 40px rgba(0,0,0,.45);
 }
 
-.square{
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:100%;
-  height:100%;
-  touch-action:none;
+.square {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    user-select: none;
 }
 
-.light{background:#f0d9b5}
-.dark{background:#b58863}
-
-.square.selected{
-  box-shadow:inset 0 0 0 5px #f6d54a;
+.light {
+    background: #f0d9b5;
 }
 
-.square.last{
-  background-image:linear-gradient(
-    rgba(255,215,55,.27),
-    rgba(255,215,55,.27)
-  );
+.dark {
+    background: #b58863;
 }
 
-.square.legal::after{
-  content:"";
-  position:absolute;
-  width:22%;
-  height:22%;
-  border-radius:50%;
-  background:rgba(20,20,20,.42);
+.piece {
+    font-size: clamp(31px, 9vw, 61px);
+    line-height: 1;
+    user-select: none;
+    pointer-events: none;
+    transition: transform .12s ease;
+    text-shadow: 0 2px 2px rgba(0,0,0,.35);
 }
 
-.square.capture::after{
-  content:"";
-  position:absolute;
-  width:78%;
-  height:78%;
-  border-radius:50%;
-  border:5px solid rgba(190,35,35,.65);
+.square.selected {
+    box-shadow: inset 0 0 0 5px rgba(255,215,0,.75);
 }
 
-.square.check{
-  box-shadow:
-    inset 0 0 0 5px #e53935,
-    inset 0 0 25px rgba(255,0,0,.45);
+.square.lastmove {
+    background: rgba(255,235,59,.42);
 }
 
-.piece{
-  width:92%;
-  height:92%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:
-    "Arial Unicode MS",
-    "Segoe UI Symbol",
-    sans-serif;
-  font-size:clamp(38px,8vw,67px);
-  line-height:1;
-  user-select:none;
-  -webkit-user-select:none;
-  position:relative;
-  z-index:5;
-  pointer-events:none;
-  transition:transform .12s ease;
+.square.check {
+    background: rgba(255,60,60,.72);
 }
 
-.white-piece{
-  color:#fff;
-  text-shadow:
-    0 2px 0 #777,
-    1px 4px 5px rgba(0,0,0,.6);
+.move-dot {
+    width: 20%;
+    height: 20%;
+    border-radius: 50%;
+    background: rgba(20,20,20,.35);
+    position: absolute;
 }
 
-.black-piece{
-  color:#171717;
-  text-shadow:
-    0 2px 1px rgba(255,255,255,.2),
-    1px 4px 5px rgba(0,0,0,.7);
+.capture-ring {
+    position: absolute;
+    width: 78%;
+    height: 78%;
+    border: 5px solid rgba(20,20,20,.35);
+    border-radius: 50%;
 }
 
-/* FLOATING PIECE */
-
-.drag-piece{
-  position:fixed;
-  z-index:99999;
-  pointer-events:none;
-  width:70px;
-  height:70px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:"Arial Unicode MS","Segoe UI Symbol",sans-serif;
-  font-size:62px;
-  line-height:1;
-  transform:translate(-50%,-50%) scale(1.12);
-  filter:drop-shadow(0 12px 8px rgba(0,0,0,.5));
-  transition:none;
+.drag-piece {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    font-size: clamp(40px, 12vw, 70px);
+    transform: translate(-50%, -50%) scale(1.12);
+    filter: drop-shadow(0 12px 8px rgba(0,0,0,.4));
+    transition: none;
 }
 
-.drag-piece.white-piece{
-  color:#fff;
+.panel {
+    margin-top: 15px;
+    background: #181d27;
+    border-radius: 12px;
+    padding: 13px;
 }
 
-.drag-piece.black-piece{
-  color:#111;
+.moves {
+    max-height: 130px;
+    overflow-y: auto;
+    color: #cbd5e1;
+    font-family: monospace;
+    font-size: 14px;
 }
 
-.drag-piece.release{
-  transition:
-    left .16s cubic-bezier(.2,.9,.3,1),
-    top .16s cubic-bezier(.2,.9,.3,1),
-    transform .16s ease;
-  transform:translate(-50%,-50%) scale(1);
+.thinking {
+    color: #60a5fa;
 }
 
-.panel{
-  width:310px;
-  flex-shrink:0;
-  background:#151c2b;
-  border:1px solid #283248;
-  border-radius:14px;
-  padding:16px;
-}
+@media (max-width: 450px) {
+    .app {
+        padding: 10px;
+    }
 
-.status{
-  background:#0d1422;
-  border-radius:10px;
-  padding:14px;
-  margin-bottom:14px;
-}
-
-.status small{
-  display:block;
-  color:#8791a6;
-  margin-bottom:5px;
-}
-
-#status{
-  font-size:18px;
-  font-weight:bold;
-}
-
-.history{
-  background:#0d1422;
-  border-radius:10px;
-  padding:13px;
-}
-
-.history h3{
-  margin:0 0 10px;
-  font-size:15px;
-}
-
-#moves{
-  max-height:310px;
-  overflow-y:auto;
-}
-
-.move{
-  display:grid;
-  grid-template-columns:35px 1fr 1fr;
-  padding:7px 4px;
-  border-bottom:1px solid #20293a;
-  font-size:14px;
-}
-
-.num{
-  color:#737e95;
-}
-
-.empty{
-  color:#6f7a90;
-  font-size:13px;
-}
-
-@media(max-width:760px){
-  .container{padding:10px 7px 25px}
-
-  .game{
-    flex-direction:column;
-    align-items:center;
-  }
-
-  .board-wrap{
-    width:min(96vw,560px);
-  }
-
-  .panel{
-    width:min(96vw,560px);
-  }
-
-  #moves{
-    max-height:180px;
-  }
+    h1 {
+        font-size: 23px;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <h1>♟ Chess Platform</h1>
-  <p>Play chess • Learn • Improve</p>
-</header>
+<div class="app">
 
-<div class="container">
+    <h1>♟ Chess Platform</h1>
 
-<div class="controls">
+    <div class="topbar">
 
-<select id="level">
-<option value="800">Computer • 800</option>
-<option value="1000">Computer • 1000</option>
-<option value="1200">Computer • 1200</option>
-<option value="1500">Computer • 1500</option>
-<option value="1800">Computer • 1800</option>
-<option value="2000">Computer • 2000</option>
-<option value="2200">Computer • 2200+</option>
-</select>
+        <select id="level">
+            <option value="800">800 Elo</option>
+            <option value="1000">1000 Elo</option>
+            <option value="1200">1200 Elo</option>
+            <option value="1500" selected>1500 Elo</option>
+            <option value="1800">1800 Elo</option>
+            <option value="2000">2000 Elo</option>
+            <option value="2200">2200 Elo</option>
+        </select>
 
-<button id="newGame">New Game</button>
+        <button id="newGame">New Game</button>
 
-</div>
+    </div>
 
-<div class="game">
+    <div id="status" class="status">
+        Your move — White
+    </div>
 
-<div class="board-wrap">
-<div id="board"></div>
-</div>
+    <div id="board" class="board"></div>
 
-<div class="panel">
+    <div class="panel">
+        <strong>Moves</strong>
+        <div id="moves" class="moves"></div>
+    </div>
 
-<div class="status">
-<small>GAME STATUS</small>
-<div id="status">White to move</div>
-</div>
-
-<div class="history">
-<h3>Move History</h3>
-<div id="moves">
-<div class="empty">No moves yet</div>
-</div>
-</div>
-
-</div>
-
-</div>
 </div>
 
 <script>
 
+const board = document.getElementById("board");
+const statusEl = document.getElementById("status");
+const movesEl = document.getElementById("moves");
+const levelEl = document.getElementById("level");
+const newGameBtn = document.getElementById("newGame");
+
 const game = new Chess();
 
-const board = document.getElementById("board");
-const status = document.getElementById("status");
-const movesBox = document.getElementById("moves");
-const newGameButton = document.getElementById("newGame");
+let selectedSquare = null;
+let legalTargets = [];
 
-const files=["a","b","c","d","e","f","g","h"];
-const ranks=["8","7","6","5","4","3","2","1"];
+let dragging = false;
+let dragPiece = null;
+let dragFrom = null;
 
-const symbols={
-  w:{p:"♙",n:"♘",b:"♗",r:"♖",q:"♕",k:"♔"},
-  b:{p:"♟",n:"♞",b:"♝",r:"♜",q:"♛",k:"♚"}
+let lastMove = null;
+
+let computerThinking = false;
+let engineReady = false;
+
+const pieceSymbols = {
+    w: {
+        p: "♙",
+        n: "♘",
+        b: "♗",
+        r: "♖",
+        q: "♕",
+        k: "♔"
+    },
+    b: {
+        p: "♟",
+        n: "♞",
+        b: "♝",
+        r: "♜",
+        q: "♛",
+        k: "♚"
+    }
 };
 
-let selected=null;
-let lastMove=null;
 
-let dragging=false;
-let dragFrom=null;
-let floatingPiece=null;
-let dragPieceData=null;
+/* =========================
+   STOCKFISH ENGINE
+========================= */
 
+let engine;
 
-/* ---------------- SOUND ---------------- */
+function startEngine() {
 
-let audioContext=null;
+    try {
 
-function initAudio(){
+        engine = new Worker(
+            "stockfish/stockfish-19-lite-single.js"
+        );
 
-  if(!audioContext){
-    audioContext=
-      new (window.AudioContext ||
-           window.webkitAudioContext)();
-  }
+        engine.onmessage = function(event) {
 
-  if(audioContext.state==="suspended"){
-    audioContext.resume();
-  }
-}
+            const line = typeof event.data === "string"
+                ? event.data
+                : "";
 
-function captureSound(){
+            if (line === "uciok") {
 
-  try{
+                engine.postMessage("isready");
 
-    initAudio();
+            }
 
-    const osc=
-      audioContext.createOscillator();
+            if (line === "readyok") {
 
-    const gain=
-      audioContext.createGain();
+                engineReady = true;
 
-    osc.type="triangle";
+                updateStatus();
 
-    osc.frequency.setValueAtTime(
-      170,
-      audioContext.currentTime
-    );
+            }
 
-    osc.frequency.exponentialRampToValueAtTime(
-      75,
-      audioContext.currentTime+.09
-    );
+            if (line.startsWith("bestmove")) {
 
-    gain.gain.setValueAtTime(
-      .0001,
-      audioContext.currentTime
-    );
+                const parts = line.split(" ");
 
-    gain.gain.exponentialRampToValueAtTime(
-      .25,
-      audioContext.currentTime+.008
-    );
+                const bestMove = parts[1];
 
-    gain.gain.exponentialRampToValueAtTime(
-      .0001,
-      audioContext.currentTime+.11
-    );
+                if (bestMove && bestMove !== "(none)") {
 
-    osc.connect(gain);
-    gain.connect(audioContext.destination);
+                    makeComputerMove(bestMove);
 
-    osc.start();
-    osc.stop(audioContext.currentTime+.12);
+                } else {
 
-  }catch(e){}
+                    computerThinking = false;
+                    updateStatus();
 
-}
+                }
+            }
+        };
 
+        engine.onerror = function(error) {
 
-/* ---------------- BOARD ---------------- */
+            console.error("Stockfish error:", error);
 
-function buildBoard(){
+            statusEl.textContent =
+                "Stockfish failed to load. Check the stockfish folder.";
 
-  board.innerHTML="";
+        };
 
-  for(let r=0;r<8;r++){
+        engine.postMessage("uci");
 
-    for(let c=0;c<8;c++){
+    } catch (error) {
 
-      const name=
-        files[c]+ranks[r];
+        console.error(error);
 
-      const sq=
-        document.createElement("div");
-
-      sq.className=
-        "square "+
-        ((r+c)%2===0?"light":"dark");
-
-      sq.dataset.square=name;
-
-      board.appendChild(sq);
+        statusEl.textContent =
+            "Could not start Stockfish.";
 
     }
-
-  }
-
-  render();
-
 }
 
 
-/* ---------------- RENDER ---------------- */
+/* =========================
+   LEVEL SETTINGS
+========================= */
 
-function render(){
+function getEngineSettings() {
 
-  document
-    .querySelectorAll(".square")
-    .forEach(sq=>{
+    const level = Number(levelEl.value);
 
-      const name=sq.dataset.square;
+    /*
+      These are approximate playing-strength presets.
+      They are NOT guaranteed official Elo ratings.
+    */
 
-      sq.innerHTML="";
+    if (level <= 800) {
+        return {
+            skill: 1,
+            time: 250
+        };
+    }
 
-      sq.classList.remove(
-        "selected",
-        "legal",
-        "capture",
-        "check",
-        "last"
-      );
+    if (level <= 1000) {
+        return {
+            skill: 3,
+            time: 350
+        };
+    }
 
-      if(
-        lastMove &&
-        (
-          name===lastMove.from ||
-          name===lastMove.to
-        )
-      ){
-        sq.classList.add("last");
-      }
+    if (level <= 1200) {
+        return {
+            skill: 5,
+            time: 500
+        };
+    }
 
-      const piece=game.get(name);
+    if (level <= 1500) {
+        return {
+            skill: 8,
+            time: 700
+        };
+    }
 
-      if(piece){
+    if (level <= 1800) {
+        return {
+            skill: 12,
+            time: 900
+        };
+    }
 
-        const el=
-          document.createElement("div");
+    if (level <= 2000) {
+        return {
+            skill: 15,
+            time: 1200
+        };
+    }
 
-        el.className=
-          "piece "+
-          (piece.color==="w"
-            ?"white-piece"
-            :"black-piece");
-
-        el.textContent=
-          symbols[piece.color][piece.type];
-
-        sq.appendChild(el);
-
-      }
-
-    });
-
-
-  if(selected){
-
-    const selectedSq=
-      document.querySelector(
-        `[data-square="${selected}"]`
-      );
-
-    if(selectedSq)
-      selectedSq.classList.add("selected");
-
-    game.moves({
-      square:selected,
-      verbose:true
-    }).forEach(move=>{
-
-      const target=
-        document.querySelector(
-          `[data-square="${move.to}"]`
-        );
-
-      if(!target)return;
-
-      target.classList.add(
-        move.captured
-          ?"capture"
-          :"legal"
-      );
-
-    });
-
-  }
-
-
-  if(game.in_check()){
-
-    const color=game.turn();
-
-    files.forEach(file=>{
-      ranks.forEach(rank=>{
-
-        const name=file+rank;
-        const p=game.get(name);
-
-        if(
-          p &&
-          p.type==="k" &&
-          p.color===color
-        ){
-
-          const king=
-            document.querySelector(
-              `[data-square="${name}"]`
-            );
-
-          if(king)
-            king.classList.add("check");
-
-        }
-
-      });
-    });
-
-  }
-
-  updateStatus();
-  updateHistory();
-
+    return {
+        skill: 18,
+        time: 1600
+    };
 }
 
 
-/* ---------------- POINTER HELPERS ---------------- */
+/* =========================
+   ASK COMPUTER
+========================= */
 
-function getSquareFromPoint(x,y){
+function askComputer() {
 
-  const rect=
-    board.getBoundingClientRect();
+    if (!engine || !engineReady) {
 
-  if(
-    x<rect.left ||
-    x>rect.right ||
-    y<rect.top ||
-    y>rect.bottom
-  ){
-    return null;
-  }
-
-  const size=rect.width/8;
-
-  const col=
-    Math.floor((x-rect.left)/size);
-
-  const row=
-    Math.floor((y-rect.top)/size);
-
-  if(
-    col<0 || col>7 ||
-    row<0 || row>7
-  ){
-    return null;
-  }
-
-  return files[col]+ranks[row];
-
-}
-
-
-/* ---------------- FLOATING PIECE ---------------- */
-
-function createFloatingPiece(piece,x,y){
-
-  floatingPiece=
-    document.createElement("div");
-
-  floatingPiece.className=
-    "drag-piece "+
-    (piece.color==="w"
-      ?"white-piece"
-      :"black-piece");
-
-  floatingPiece.textContent=
-    symbols[piece.color][piece.type];
-
-  floatingPiece.style.left=x+"px";
-  floatingPiece.style.top=y+"px";
-
-  document.body.appendChild(
-    floatingPiece
-  );
-
-}
-
-
-/* ---------------- START DRAG ---------------- */
-
-function startDrag(square,event){
-
-  if(game.game_over())return;
-
-  const piece=game.get(square);
-
-  if(!piece)return;
-
-  if(piece.color!==game.turn())
-    return;
-
-  event.preventDefault();
-
-  initAudio();
-
-  dragging=true;
-  dragFrom=square;
-  dragPieceData=piece;
-  selected=square;
-
-  /*
-    Hide original piece.
-  */
-
-  const original=
-    document.querySelector(
-      `[data-square="${square}"] .piece`
-    );
-
-  if(original)
-    original.style.visibility="hidden";
-
-  createFloatingPiece(
-    piece,
-    event.clientX,
-    event.clientY
-  );
-
-  render();
-
-  /*
-    render() recreated original piece,
-    so hide it again.
-  */
-
-  const originalAgain=
-    document.querySelector(
-      `[data-square="${square}"] .piece`
-    );
-
-  if(originalAgain)
-    originalAgain.style.visibility="hidden";
-
-}
-
-
-/* ---------------- DRAG MOVE ---------------- */
-
-function moveDrag(event){
-
-  if(!dragging || !floatingPiece)
-    return;
-
-  event.preventDefault();
-
-  floatingPiece.style.left=
-    event.clientX+"px";
-
-  floatingPiece.style.top=
-    event.clientY+"px";
-
-}
-
-
-/* ---------------- RELEASE ---------------- */
-
-function endDrag(event){
-
-  if(!dragging)
-    return;
-
-  event.preventDefault();
-
-  const from=dragFrom;
-
-  const to=
-    getSquareFromPoint(
-      event.clientX,
-      event.clientY
-    );
-
-  dragging=false;
-  dragFrom=null;
-
-  const piece=dragPieceData;
-  dragPieceData=null;
-
-  /*
-    Invalid drop:
-    animate piece back to original square.
-  */
-
-  if(!to || !tryMove(from,to)){
-
-    if(floatingPiece){
-
-      const originalSquare=
-        document.querySelector(
-          `[data-square="${from}"]`
-        );
-
-      if(originalSquare){
-
-        const rect=
-          originalSquare.getBoundingClientRect();
-
-        floatingPiece.classList.add(
-          "release"
-        );
-
-        floatingPiece.style.left=
-          (rect.left+rect.width/2)+"px";
-
-        floatingPiece.style.top=
-          (rect.top+rect.height/2)+"px";
-
-        setTimeout(()=>{
-          removeFloating();
-          selected=from;
-          render();
-        },170);
+        statusEl.textContent =
+            "Engine is still loading...";
 
         return;
-
-      }
-
     }
 
-    removeFloating();
-    selected=null;
-    render();
-    return;
+    if (game.game_over()) {
+        return;
+    }
 
-  }
+    computerThinking = true;
 
+    selectedSquare = null;
+    legalTargets = [];
 
-  /*
-    Valid move:
-    animate floating piece from
-    current position to target square.
-  */
+    renderBoard();
 
-  const targetSquare=
-    document.querySelector(
-      `[data-square="${to}"]`
+    statusEl.innerHTML =
+        '<span class="thinking">Computer is thinking...</span>';
+
+    const settings = getEngineSettings();
+
+    engine.postMessage("stop");
+
+    engine.postMessage("ucinewgame");
+
+    engine.postMessage(
+        "setoption name Skill Level value " +
+        settings.skill
     );
 
-  if(floatingPiece && targetSquare){
-
-    const rect=
-      targetSquare.getBoundingClientRect();
-
-    floatingPiece.classList.add(
-      "release"
+    engine.postMessage(
+        "position fen " + game.fen()
     );
 
-    floatingPiece.style.left=
-      (rect.left+rect.width/2)+"px";
-
-    floatingPiece.style.top=
-      (rect.top+rect.height/2)+"px";
-
-    setTimeout(()=>{
-      removeFloating();
-      selected=null;
-      render();
-    },170);
-
-  }else{
-
-    removeFloating();
-    selected=null;
-    render();
-
-  }
-
+    engine.postMessage(
+        "go movetime " + settings.time
+    );
 }
 
 
-/* ---------------- REMOVE FLOATING ---------------- */
+/* =========================
+   COMPUTER MOVE
+========================= */
 
-function removeFloating(){
+function makeComputerMove(uciMove) {
 
-  if(floatingPiece){
+    if (!uciMove || uciMove.length < 4) {
 
-    floatingPiece.remove();
-    floatingPiece=null;
+        computerThinking = false;
+        updateStatus();
+        return;
+    }
 
-  }
+    const from = uciMove.substring(0, 2);
+    const to = uciMove.substring(2, 4);
+    const promotion = uciMove.length >= 5
+        ? uciMove.substring(4, 5)
+        : undefined;
 
-}
+    const movingPiece = game.get(from);
 
+    if (!movingPiece) {
 
-/* ---------------- MOVE ---------------- */
+        computerThinking = false;
+        updateStatus();
+        return;
+    }
 
-function tryMove(from,to){
+    const capture = !!game.get(to);
 
-  if(from===to)
-    return false;
+    /*
+      First make the legal move in chess.js.
+    */
 
-  const piece=game.get(from);
-
-  if(!piece)
-    return false;
-
-  let promotion="q";
-
-  if(
-    piece.type==="p" &&
-    (
-      to[1]==="8" ||
-      to[1]==="1"
-    )
-  ){
-
-    let answer=
-      prompt(
-        "Promote to:\n\n"+
-        "q = Queen\n"+
-        "r = Rook\n"+
-        "b = Bishop\n"+
-        "n = Knight"
-      );
-
-    answer=
-      (answer||"q").toLowerCase();
-
-    if(!["q","r","b","n"].includes(answer))
-      answer="q";
-
-    promotion=answer;
-
-  }
-
-  /*
-    Check whether target contains
-    opponent piece BEFORE making move.
-  */
-
-  const captured=
-    !!game.get(to);
-
-  const move=
-    game.move({
-      from:from,
-      to:to,
-      promotion:promotion
+    const move = game.move({
+        from: from,
+        to: to,
+        promotion: promotion || "q"
     });
 
-  if(!move)
-    return false;
+    if (!move) {
 
-  lastMove={
-    from:from,
-    to:to
-  };
-
-  if(captured)
-    captureSound();
-
-  return true;
-
-}
-
-
-/* ---------------- TAP TO MOVE ---------------- */
-
-function tapSquare(square){
-
-  if(dragging)return;
-
-  if(game.game_over())
-    return;
-
-  const piece=game.get(square);
-
-  if(selected){
-
-    if(tryMove(selected,square)){
-
-      selected=null;
-      render();
-      return;
-
+        computerThinking = false;
+        updateStatus();
+        return;
     }
 
-    if(
-      piece &&
-      piece.color===game.turn()
-    ){
+    lastMove = {
+        from: from,
+        to: to
+    };
 
-      selected=square;
-      render();
-      return;
+    renderBoard();
 
+    /*
+      Hide the destination piece temporarily.
+      The floating piece will visually travel there.
+    */
+
+    const destinationSquare =
+        document.querySelector(
+            `[data-square="${to}"]`
+        );
+
+    if (destinationSquare) {
+
+        const destinationPiece =
+            destinationSquare.querySelector(".piece");
+
+        if (destinationPiece) {
+            destinationPiece.style.visibility = "hidden";
+        }
     }
 
-    selected=null;
-    render();
-    return;
-
-  }
-
-  if(
-    piece &&
-    piece.color===game.turn()
-  ){
-
-    selected=square;
-    render();
-
-  }
-
+    animateComputerPiece(
+        from,
+        to,
+        movingPiece.color,
+        movingPiece.type,
+        capture
+    );
 }
 
 
-/* ---------------- EVENTS ---------------- */
+/* =========================
+   COMPUTER ANIMATION
+========================= */
 
-board.addEventListener(
-  "pointerdown",
-  event=>{
+function animateComputerPiece(
+    from,
+    to,
+    color,
+    type,
+    capture
+) {
 
-    const squareElement=
-      event.target.closest(".square");
+    const fromSquare =
+        document.querySelector(
+            `[data-square="${from}"]`
+        );
 
-    if(!squareElement)return;
+    const toSquare =
+        document.querySelector(
+            `[data-square="${to}"]`
+        );
 
-    startDrag(
-      squareElement.dataset.square,
-      event
+    if (!fromSquare || !toSquare) {
+
+        finishComputerMove(capture);
+        return;
+    }
+
+    const fromRect =
+        fromSquare.getBoundingClientRect();
+
+    const toRect =
+        toSquare.getBoundingClientRect();
+
+    const floating =
+        document.createElement("div");
+
+    floating.className = "drag-piece";
+
+    floating.textContent =
+        pieceSymbols[color][type];
+
+    floating.style.left =
+        (fromRect.left + fromRect.width / 2) + "px";
+
+    floating.style.top =
+        (fromRect.top + fromRect.height / 2) + "px";
+
+    document.body.appendChild(floating);
+
+    fromSquare.style.opacity = "0";
+
+    const startX =
+        fromRect.left + fromRect.width / 2;
+
+    const startY =
+        fromRect.top + fromRect.height / 2;
+
+    const endX =
+        toRect.left + toRect.width / 2;
+
+    const endY =
+        toRect.top + toRect.height / 2;
+
+    const duration = 280;
+
+    const startTime = performance.now();
+
+    function animate(time) {
+
+        const progress =
+            Math.min(
+                (time - startTime) / duration,
+                1
+            );
+
+        /*
+          Smooth ease-in-out movement
+        */
+
+        const eased =
+            progress < .5
+                ? 2 * progress * progress
+                : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+        floating.style.left =
+            (startX + (endX - startX) * eased) + "px";
+
+        floating.style.top =
+            (startY + (endY - startY) * eased) + "px";
+
+        if (progress < 1) {
+
+            requestAnimationFrame(animate);
+
+        } else {
+
+            floating.remove();
+
+            finishComputerMove(capture);
+        }
+    }
+
+    requestAnimationFrame(animate);
+}
+
+
+/* =========================
+   FINISH COMPUTER MOVE
+========================= */
+
+function finishComputerMove(capture) {
+
+    computerThinking = false;
+
+    renderBoard();
+
+    if (capture) {
+        playCaptureSound();
+    }
+
+    updateStatus();
+}
+
+
+/* =========================
+   BOARD
+========================= */
+
+function renderBoard() {
+
+    board.innerHTML = "";
+
+    const orientation = "w";
+
+    for (let row = 0; row < 8; row++) {
+
+        for (let col = 0; col < 8; col++) {
+
+            const file =
+                orientation === "w"
+                    ? String.fromCharCode(97 + col)
+                    : String.fromCharCode(104 - col);
+
+            const rank =
+                orientation === "w"
+                    ? 8 - row
+                    : row + 1;
+
+            const squareName =
+                file + rank;
+
+            const square =
+                document.createElement("div");
+
+            square.className =
+                "square " +
+                (((row + col) % 2 === 0)
+                    ? "light"
+                    : "dark");
+
+            square.dataset.square =
+                squareName;
+
+            const piece =
+                game.get(squareName);
+
+            if (piece) {
+
+                const pieceEl =
+                    document.createElement("div");
+
+                pieceEl.className =
+                    "piece";
+
+                pieceEl.textContent =
+                    pieceSymbols[piece.color][piece.type];
+
+                square.appendChild(pieceEl);
+            }
+
+            if (
+                lastMove &&
+                (
+                    lastMove.from === squareName ||
+                    lastMove.to === squareName
+                )
+            ) {
+
+                square.classList.add("lastmove");
+            }
+
+            if (
+                selectedSquare === squareName
+            ) {
+
+                square.classList.add("selected");
+            }
+
+            if (
+                legalTargets.includes(squareName)
+            ) {
+
+                if (game.get(squareName)) {
+
+                    const ring =
+                        document.createElement("div");
+
+                    ring.className =
+                        "capture-ring";
+
+                    square.appendChild(ring);
+
+                } else {
+
+                    const dot =
+                        document.createElement("div");
+
+                    dot.className =
+                        "move-dot";
+
+                    square.appendChild(dot);
+                }
+            }
+
+            square.addEventListener(
+                "pointerdown",
+                handlePointerDown
+            );
+
+            square.addEventListener(
+                "click",
+                handleClick
+            );
+
+            board.appendChild(square);
+        }
+    }
+
+    /*
+      Highlight king in check.
+    */
+
+    if (game.in_check()) {
+
+        const color =
+            game.turn();
+
+        for (const sq of allSquares()) {
+
+            const piece = game.get(sq);
+
+            if (
+                piece &&
+                piece.type === "k" &&
+                piece.color === color
+            ) {
+
+                const kingSquare =
+                    document.querySelector(
+                        `[data-square="${sq}"]`
+                    );
+
+                if (kingSquare) {
+                    kingSquare.classList.add("check");
+                }
+            }
+        }
+    }
+
+    updateMoves();
+    updateStatus();
+}
+
+
+/* =========================
+   CLICK / TAP MOVE
+========================= */
+
+function handleClick(event) {
+
+    if (dragging || computerThinking) {
+        return;
+    }
+
+    const square =
+        event.currentTarget.dataset.square;
+
+    if (game.turn() !== "w") {
+        return;
+    }
+
+    const piece =
+        game.get(square);
+
+    if (!selectedSquare) {
+
+        if (
+            piece &&
+            piece.color === game.turn()
+        ) {
+
+            selectSquare(square);
+        }
+
+        return;
+    }
+
+    if (legalTargets.includes(square)) {
+
+        tryPlayerMove(
+            selectedSquare,
+            square
+        );
+
+        return;
+    }
+
+    if (
+        piece &&
+        piece.color === game.turn()
+    ) {
+
+        selectSquare(square);
+
+    } else {
+
+        clearSelection();
+    }
+}
+
+
+/* =========================
+   SELECT
+========================= */
+
+function selectSquare(square) {
+
+    selectedSquare = square;
+
+    const moves =
+        game.moves({
+            square: square,
+            verbose: true
+        });
+
+    legalTargets =
+        moves.map(m => m.to);
+
+    renderBoard();
+}
+
+
+/* =========================
+   PLAYER MOVE
+========================= */
+
+function tryPlayerMove(from, to) {
+
+    const move =
+        game.move({
+            from: from,
+            to: to,
+            promotion: "q"
+        });
+
+    if (!move) {
+        return;
+    }
+
+    lastMove = {
+        from: from,
+        to: to
+    };
+
+    clearSelection();
+
+    if (move.captured) {
+        playCaptureSound();
+    }
+
+    renderBoard();
+
+    if (!game.game_over()) {
+
+        setTimeout(() => {
+
+            if (game.turn() === "b") {
+                askComputer();
+            }
+
+        }, 300);
+
+    }
+}
+
+
+/* =========================
+   DRAG SYSTEM
+========================= */
+
+function handlePointerDown(event) {
+
+    if (computerThinking) {
+        return;
+    }
+
+    if (game.turn() !== "w") {
+        return;
+    }
+
+    const square =
+        event.currentTarget.dataset.square;
+
+    const piece =
+        game.get(square);
+
+    if (
+        !piece ||
+        piece.color !== game.turn()
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+
+    dragging = true;
+    dragFrom = square;
+
+    const moves =
+        game.moves({
+            square: square,
+            verbose: true
+        });
+
+    legalTargets =
+        moves.map(m => m.to);
+
+    selectedSquare = square;
+
+    const floating =
+        document.createElement("div");
+
+    floating.className =
+        "drag-piece";
+
+    floating.textContent =
+        pieceSymbols[piece.color][piece.type];
+
+    floating.style.left =
+        event.clientX + "px";
+
+    floating.style.top =
+        event.clientY + "px";
+
+    document.body.appendChild(floating);
+
+    dragPiece = floating;
+
+    renderBoard();
+
+    window.addEventListener(
+        "pointermove",
+        handlePointerMove
     );
 
-  },
-  {passive:false}
-);
+    window.addEventListener(
+        "pointerup",
+        handlePointerUp,
+        { once: true }
+    );
+}
 
 
-board.addEventListener(
-  "pointermove",
-  moveDrag,
-  {passive:false}
-);
+function handlePointerMove(event) {
+
+    if (!dragging || !dragPiece) {
+        return;
+    }
+
+    dragPiece.style.left =
+        event.clientX + "px";
+
+    dragPiece.style.top =
+        event.clientY + "px";
+}
 
 
-board.addEventListener(
-  "pointerup",
-  endDrag,
-  {passive:false}
-);
+function handlePointerUp(event) {
 
+    if (!dragging) {
+        return;
+    }
 
-board.addEventListener(
-  "pointercancel",
-  endDrag,
-  {passive:false}
-);
+    const target =
+        document.elementFromPoint(
+            event.clientX,
+            event.clientY
+        );
 
+    const targetSquare =
+        target?.closest(".square");
 
-/*
-  Normal tap.
-  Pointerup already handles drag,
-  so this handles simple taps
-  using click only when no drag happened.
-*/
+    const to =
+        targetSquare?.dataset.square;
 
-board.addEventListener(
-  "click",
-  event=>{
+    const from =
+        dragFrom;
 
-    if(dragging)return;
+    dragging = false;
 
-    const square=
-      event.target.closest(".square");
-
-    if(!square)return;
-
-    tapSquare(
-      square.dataset.square
+    window.removeEventListener(
+        "pointermove",
+        handlePointerMove
     );
 
-  }
-);
+    if (
+        to &&
+        legalTargets.includes(to)
+    ) {
 
+        if (dragPiece) {
+            dragPiece.remove();
+        }
 
-/* ---------------- STATUS ---------------- */
+        dragPiece = null;
 
-function updateStatus(){
+        tryPlayerMove(from, to);
 
-  if(game.in_checkmate()){
+    } else {
 
-    status.textContent=
-      game.turn()==="w"
-      ?"♛ Checkmate — Black wins"
-      :"♛ Checkmate — White wins";
-
-    return;
-
-  }
-
-  if(game.in_stalemate()){
-
-    status.textContent=
-      "½–½ Stalemate";
-
-    return;
-
-  }
-
-  if(game.is_draw()){
-
-    status.textContent=
-      "½–½ Draw";
-
-    return;
-
-  }
-
-  if(game.in_check()){
-
-    status.textContent=
-      game.turn()==="w"
-      ?"⚠️ White is in check"
-      :"⚠️ Black is in check";
-
-    return;
-
-  }
-
-  status.textContent=
-    game.turn()==="w"
-    ?"White to move"
-    :"Black to move";
-
+        animateDragBack(from);
+    }
 }
 
 
-/* ---------------- HISTORY ---------------- */
+/* =========================
+   DRAG RETURN
+========================= */
 
-function updateHistory(){
+function animateDragBack(from) {
 
-  const history=
-    game.history();
+    if (!dragPiece) {
+        clearSelection();
+        return;
+    }
 
-  movesBox.innerHTML="";
+    const square =
+        document.querySelector(
+            `[data-square="${from}"]`
+        );
 
-  if(!history.length){
+    if (!square) {
 
-    movesBox.innerHTML=
-      '<div class="empty">No moves yet</div>';
+        dragPiece.remove();
+        dragPiece = null;
+        clearSelection();
+        return;
+    }
 
-    return;
+    const rect =
+        square.getBoundingClientRect();
 
-  }
+    dragPiece.style.transition =
+        "all .16s ease";
 
-  for(
-    let i=0;
-    i<history.length;
-    i+=2
-  ){
+    dragPiece.style.left =
+        (rect.left + rect.width / 2) + "px";
 
-    const row=
-      document.createElement("div");
+    dragPiece.style.top =
+        (rect.top + rect.height / 2) + "px";
 
-    row.className="move";
+    setTimeout(() => {
 
-    row.innerHTML=
-      `<div class="num">${i/2+1}.</div>`+
-      `<div>${history[i]||""}</div>`+
-      `<div>${history[i+1]||""}</div>`;
+        if (dragPiece) {
+            dragPiece.remove();
+        }
 
-    movesBox.appendChild(row);
+        dragPiece = null;
 
-  }
+        clearSelection();
 
-  movesBox.scrollTop=
-    movesBox.scrollHeight;
-
+    }, 170);
 }
 
 
-/* ---------------- NEW GAME ---------------- */
+/* =========================
+   CLEAR
+========================= */
 
-newGameButton.addEventListener(
-  "click",
-  ()=>{
-    game.reset();
-    selected=null;
-    lastMove=null;
-    removeFloating();
-    render();
-  }
-);
+function clearSelection() {
+
+    selectedSquare = null;
+    legalTargets = [];
+
+    renderBoard();
+}
 
 
-/* ---------------- START ---------------- */
+/* =========================
+   MOVES
+========================= */
 
-buildBoard();
+function updateMoves() {
 
-</script>
+    let html = "";
 
-</body>
-</html>
+    const history =
+        game.history();
+
+    for (let i = 0; i < history.length; i += 2) {
+
+        const number =
+            
