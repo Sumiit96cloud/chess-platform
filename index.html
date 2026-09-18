@@ -1,656 +1,366 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>Chess Platform</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
 <style>
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+
+/* =========================
+   RESET
+========================= */
+
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
 }
 
-body {
-    margin: 0;
-    background: #10131a;
-    color: #fff;
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    min-height: 100vh;
+html,body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    background:#090d14;
+    color:#fff;
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 }
 
-.app {
-    width: 100%;
-    max-width: 650px;
-    padding: 18px;
+body{
+    min-height:100vh;
 }
-
-h1 {
-    text-align: center;
-    margin: 5px 0 15px;
-    font-size: 28px;
-}
-
-.topbar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-select,
-button {
-    border: 0;
-    border-radius: 10px;
-    padding: 11px 14px;
-    font-size: 15px;
-    cursor: pointer;
-}
-
-select {
-    flex: 1;
-    background: #202631;
-    color: white;
-}
-
-button {
-    background: #3b82f6;
-    color: white;
-}
-
-button:active {
-    transform: scale(.97);
-}
-
-.status {
-    text-align: center;
-    min-height: 25px;
-    margin-bottom: 10px;
-    color: #cbd5e1;
-    font-size: 15px;
-}
-
-.board {
-    width: min(92vw, 600px);
-    aspect-ratio: 1 / 1;
-    margin: auto;
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    border-radius: 10px;
-    overflow: hidden;
-    touch-action: none;
-    box-shadow: 0 12px 40px rgba(0,0,0,.45);
-}
-
-.square {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    aspect-ratio: 1 / 1;
-    user-select: none;
-}
-
-.light {
-    background: #f0d9b5;
-}
-
-.dark {
-    background: #b58863;
-}
-
-.piece {
-    font-size: clamp(31px, 9vw, 61px);
-    line-height: 1;
-    user-select: none;
-    pointer-events: none;
-    transition: transform .12s ease;
-    text-shadow: 0 2px 2px rgba(0,0,0,.35);
-}
-
-.square.selected {
-    box-shadow: inset 0 0 0 5px rgba(255,215,0,.75);
-}
-
-.square.lastmove {
-    background: rgba(255,235,59,.42);
-}
-
-.square.check {
-    background: rgba(255,60,60,.72);
-}
-
-.move-dot {
-    width: 20%;
-    height: 20%;
-    border-radius: 50%;
-    background: rgba(20,20,20,.35);
-    position: absolute;
-}
-
-.capture-ring {
-    position: absolute;
-    width: 78%;
-    height: 78%;
-    border: 5px solid rgba(20,20,20,.35);
-    border-radius: 50%;
-}
-
-.drag-piece {
-    position: fixed;
-    z-index: 9999;
-    pointer-events: none;
-    font-size: clamp(40px, 12vw, 70px);
-    transform: translate(-50%, -50%) scale(1.12);
-    filter: drop-shadow(0 12px 8px rgba(0,0,0,.4));
-    transition: none;
-}
-
-.panel {
-    margin-top: 15px;
-    background: #181d27;
-    border-radius: 12px;
-    padding: 13px;
-}
-
-.moves {
-    max-height: 130px;
-    overflow-y: auto;
-    color: #cbd5e1;
-    font-family: monospace;
-    font-size: 14px;
-}
-
-.thinking {
-    color: #60a5fa;
-}
-
-@media (max-width: 450px) {
-    .app {
-        padding: 10px;
-    }
-
-    h1 {
-        font-size: 23px;
-    }
-}
-</style>
-</head>
-
-<body>
-
-<div class="app">
-
-    <h1>♟ Chess Platform</h1>
-
-    <div class="topbar">
-
-        <select id="level">
-            <option value="800">800 Elo</option>
-            <option value="1000">1000 Elo</option>
-            <option value="1200">1200 Elo</option>
-            <option value="1500" selected>1500 Elo</option>
-            <option value="1800">1800 Elo</option>
-            <option value="2000">2000 Elo</option>
-            <option value="2200">2200 Elo</option>
-        </select>
-
-        <button id="newGame">New Game</button>
-
-    </div>
-
-    <div id="status" class="status">
-        Your move — White
-    </div>
-
-    <div id="board" class="board"></div>
-
-    <div class="panel">
-        <strong>Moves</strong>
-        <div id="moves" class="moves"></div>
-    </div>
-
-</div>
-
-<script>
-
-const board = document.getElementById("board");
-const statusEl = document.getElementById("status");
-const movesEl = document.getElementById("moves");
-const levelEl = document.getElementById("level");
-const newGameBtn = document.getElementById("newGame");
-
-const game = new Chess();
-
-let selectedSquare = null;
-let legalTargets = [];
-
-let dragging = false;
-let dragPiece = null;
-let dragFrom = null;
-
-let lastMove = null;
-
-let computerThinking = false;
-let engineReady = false;
-
-const pieceSymbols = {
-    w: {
-        p: "♙",
-        n: "♘",
-        b: "♗",
-        r: "♖",
-        q: "♕",
-        k: "♔"
-    },
-    b: {
-        p: "♟",
-        n: "♞",
-        b: "♝",
-        r: "♜",
-        q: "♛",
-        k: "♚"
-    }
-};
 
 
 /* =========================
-   STOCKFISH ENGINE
+   APP
 ========================= */
 
-let engine;
+.app{
+    width:100%;
+    max-width:1100px;
+    margin:auto;
+    padding:22px;
+}
 
-function startEngine() {
 
-    try {
+/* =========================
+   HEADER
+========================= */
 
-        engine = new Worker(
-            "stockfish/stockfish-19-lite-single.js"
+.header{
+    text-align:center;
+    margin-bottom:35px;
+}
+
+.logo{
+    font-size:42px;
+    font-weight:800;
+    letter-spacing:-1px;
+}
+
+.subtitle{
+    margin-top:8px;
+    color:#94a3b8;
+    font-size:17px;
+}
+
+
+/* =========================
+   HOME
+========================= */
+
+#homeScreen{
+    display:block;
+}
+
+.modes{
+    display:grid;
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+
+    gap:18px;
+
+    max-width:850px;
+
+    margin:auto;
+}
+
+.mode{
+    position:relative;
+
+    min-height:190px;
+
+    padding:26px;
+
+    border-radius:20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #171e2b,
+            #111722
         );
 
-        engine.onmessage = function(event) {
+    border:1px solid #273244;
 
-            const line = typeof event.data === "string"
-                ? event.data
-                : "";
+    cursor:pointer;
 
-            if (line === "uciok") {
+    transition:
+        transform .18s ease,
+        border-color .18s ease,
+        background .18s ease;
 
-                engine.postMessage("isready");
+    overflow:hidden;
+}
 
-            }
+.mode:hover{
+    transform:translateY(-4px);
+    border-color:#3b82f6;
+}
 
-            if (line === "readyok") {
+.mode:active{
+    transform:scale(.98);
+}
 
-                engineReady = true;
+.modeIcon{
+    font-size:42px;
+    margin-bottom:18px;
+}
 
-                updateStatus();
+.modeTitle{
+    font-size:24px;
+    font-weight:700;
+}
 
-            }
+.modeText{
+    color:#94a3b8;
+    margin-top:8px;
+    line-height:1.5;
+}
 
-            if (line.startsWith("bestmove")) {
+.modeArrow{
+    position:absolute;
+    right:22px;
+    bottom:20px;
 
-                const parts = line.split(" ");
-
-                const bestMove = parts[1];
-
-                if (bestMove && bestMove !== "(none)") {
-
-                    makeComputerMove(bestMove);
-
-                } else {
-
-                    computerThinking = false;
-                    updateStatus();
-
-                }
-            }
-        };
-
-        engine.onerror = function(error) {
-
-            console.error("Stockfish error:", error);
-
-            statusEl.textContent =
-                "Stockfish failed to load. Check the stockfish folder.";
-
-        };
-
-        engine.postMessage("uci");
-
-    } catch (error) {
-
-        console.error(error);
-
-        statusEl.textContent =
-            "Could not start Stockfish.";
-
-    }
+    font-size:25px;
+    color:#64748b;
 }
 
 
 /* =========================
-   LEVEL SETTINGS
+   SETUP SCREEN
 ========================= */
 
-function getEngineSettings() {
+.screen{
+    display:none;
+}
 
-    const level = Number(levelEl.value);
+.setup{
+    max-width:600px;
+    margin:auto;
 
-    /*
-      These are approximate playing-strength presets.
-      They are NOT guaranteed official Elo ratings.
-    */
+    background:#121925;
 
-    if (level <= 800) {
-        return {
-            skill: 1,
-            time: 250
-        };
-    }
+    border:1px solid #273244;
 
-    if (level <= 1000) {
-        return {
-            skill: 3,
-            time: 350
-        };
-    }
+    border-radius:22px;
 
-    if (level <= 1200) {
-        return {
-            skill: 5,
-            time: 500
-        };
-    }
+    padding:28px;
+}
 
-    if (level <= 1500) {
-        return {
-            skill: 8,
-            time: 700
-        };
-    }
+.setup h2{
+    margin-top:0;
+    font-size:28px;
+}
 
-    if (level <= 1800) {
-        return {
-            skill: 12,
-            time: 900
-        };
-    }
+.option{
+    margin-top:22px;
+}
 
-    if (level <= 2000) {
-        return {
-            skill: 15,
-            time: 1200
-        };
-    }
+.option label{
+    display:block;
 
-    return {
-        skill: 18,
-        time: 1600
-    };
+    color:#94a3b8;
+
+    margin-bottom:9px;
+
+    font-size:14px;
+}
+
+select{
+    width:100%;
+
+    height:52px;
+
+    border:1px solid #334155;
+
+    border-radius:12px;
+
+    background:#1b2432;
+
+    color:white;
+
+    padding:0 15px;
+
+    font-size:16px;
+
+    outline:none;
+}
+
+.buttons{
+    display:flex;
+
+    gap:10px;
+
+    margin-top:28px;
+}
+
+.primary,
+.secondary{
+    height:52px;
+
+    border:0;
+
+    border-radius:12px;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    cursor:pointer;
+}
+
+.primary{
+    flex:1;
+
+    background:#3b82f6;
+
+    color:white;
+}
+
+.secondary{
+    background:#202938;
+
+    color:#cbd5e1;
+
+    padding:0 20px;
+}
+
+.primary:active,
+.secondary:active{
+    transform:scale(.97);
 }
 
 
 /* =========================
-   ASK COMPUTER
+   GAME SCREEN
 ========================= */
 
-function askComputer() {
+#gameScreen{
+    display:none;
+}
 
-    if (!engine || !engineReady) {
+.gameHeader{
+    display:flex;
 
-        statusEl.textContent =
-            "Engine is still loading...";
+    justify-content:space-between;
 
-        return;
-    }
+    align-items:center;
 
-    if (game.game_over()) {
-        return;
-    }
+    gap:10px;
 
-    computerThinking = true;
+    margin-bottom:12px;
+}
 
-    selectedSquare = null;
-    legalTargets = [];
+.gameTitle{
+    font-size:20px;
+    font-weight:bold;
+}
 
-    renderBoard();
+.backButton{
+    background:#202938;
 
-    statusEl.innerHTML =
-        '<span class="thinking">Computer is thinking...</span>';
+    color:#cbd5e1;
 
-    const settings = getEngineSettings();
+    border:0;
 
-    engine.postMessage("stop");
+    border-radius:10px;
 
-    engine.postMessage("ucinewgame");
+    padding:10px 14px;
 
-    engine.postMessage(
-        "setoption name Skill Level value " +
-        settings.skill
-    );
-
-    engine.postMessage(
-        "position fen " + game.fen()
-    );
-
-    engine.postMessage(
-        "go movetime " + settings.time
-    );
+    cursor:pointer;
 }
 
 
 /* =========================
-   COMPUTER MOVE
+   CLOCK
 ========================= */
 
-function makeComputerMove(uciMove) {
+.clocks{
+    display:flex;
 
-    if (!uciMove || uciMove.length < 4) {
+    justify-content:space-between;
 
-        computerThinking = false;
-        updateStatus();
-        return;
-    }
+    gap:10px;
 
-    const from = uciMove.substring(0, 2);
-    const to = uciMove.substring(2, 4);
-    const promotion = uciMove.length >= 5
-        ? uciMove.substring(4, 5)
-        : undefined;
+    margin-bottom:10px;
+}
 
-    const movingPiece = game.get(from);
+.clock{
+    flex:1;
 
-    if (!movingPiece) {
+    padding:10px 14px;
 
-        computerThinking = false;
-        updateStatus();
-        return;
-    }
+    border-radius:10px;
 
-    const capture = !!game.get(to);
+    background:#161e2a;
 
-    /*
-      First make the legal move in chess.js.
-    */
+    border:1px solid #273244;
 
-    const move = game.move({
-        from: from,
-        to: to,
-        promotion: promotion || "q"
-    });
+    text-align:center;
+}
 
-    if (!move) {
+.clockName{
+    font-size:12px;
+    color:#94a3b8;
+}
 
-        computerThinking = false;
-        updateStatus();
-        return;
-    }
+.clockTime{
+    margin-top:3px;
 
-    lastMove = {
-        from: from,
-        to: to
-    };
+    font-size:24px;
 
-    renderBoard();
-
-    /*
-      Hide the destination piece temporarily.
-      The floating piece will visually travel there.
-    */
-
-    const destinationSquare =
-        document.querySelector(
-            `[data-square="${to}"]`
-        );
-
-    if (destinationSquare) {
-
-        const destinationPiece =
-            destinationSquare.querySelector(".piece");
-
-        if (destinationPiece) {
-            destinationPiece.style.visibility = "hidden";
-        }
-    }
-
-    animateComputerPiece(
-        from,
-        to,
-        movingPiece.color,
-        movingPiece.type,
-        capture
-    );
+    font-family:monospace;
 }
 
 
 /* =========================
-   COMPUTER ANIMATION
+   STATUS
 ========================= */
 
-function animateComputerPiece(
-    from,
-    to,
-    color,
-    type,
-    capture
-) {
+.status{
+    min-height:27px;
 
-    const fromSquare =
-        document.querySelector(
-            `[data-square="${from}"]`
-        );
+    text-align:center;
 
-    const toSquare =
-        document.querySelector(
-            `[data-square="${to}"]`
-        );
+    color:#cbd5e1;
 
-    if (!fromSquare || !toSquare) {
+    margin:7px 0 10px;
 
-        finishComputerMove(capture);
-        return;
-    }
-
-    const fromRect =
-        fromSquare.getBoundingClientRect();
-
-    const toRect =
-        toSquare.getBoundingClientRect();
-
-    const floating =
-        document.createElement("div");
-
-    floating.className = "drag-piece";
-
-    floating.textContent =
-        pieceSymbols[color][type];
-
-    floating.style.left =
-        (fromRect.left + fromRect.width / 2) + "px";
-
-    floating.style.top =
-        (fromRect.top + fromRect.height / 2) + "px";
-
-    document.body.appendChild(floating);
-
-    fromSquare.style.opacity = "0";
-
-    const startX =
-        fromRect.left + fromRect.width / 2;
-
-    const startY =
-        fromRect.top + fromRect.height / 2;
-
-    const endX =
-        toRect.left + toRect.width / 2;
-
-    const endY =
-        toRect.top + toRect.height / 2;
-
-    const duration = 280;
-
-    const startTime = performance.now();
-
-    function animate(time) {
-
-        const progress =
-            Math.min(
-                (time - startTime) / duration,
-                1
-            );
-
-        /*
-          Smooth ease-in-out movement
-        */
-
-        const eased =
-            progress < .5
-                ? 2 * progress * progress
-                : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
-        floating.style.left =
-            (startX + (endX - startX) * eased) + "px";
-
-        floating.style.top =
-            (startY + (endY - startY) * eased) + "px";
-
-        if (progress < 1) {
-
-            requestAnimationFrame(animate);
-
-        } else {
-
-            floating.remove();
-
-            finishComputerMove(capture);
-        }
-    }
-
-    requestAnimationFrame(animate);
+    font-size:16px;
 }
 
-
-/* =========================
-   FINISH COMPUTER MOVE
-========================= */
-
-function finishComputerMove(capture) {
-
-    computerThinking = false;
-
-    renderBoard();
-
-    if (capture) {
-        playCaptureSound();
-    }
-
-    updateStatus();
+.thinking{
+    color:#60a5fa;
 }
 
 
@@ -658,488 +368,1066 @@ function finishComputerMove(capture) {
    BOARD
 ========================= */
 
-function renderBoard() {
+.boardWrap{
+    width:100%;
 
-    board.innerHTML = "";
+    display:flex;
 
-    const orientation = "w";
-
-    for (let row = 0; row < 8; row++) {
-
-        for (let col = 0; col < 8; col++) {
-
-            const file =
-                orientation === "w"
-                    ? String.fromCharCode(97 + col)
-                    : String.fromCharCode(104 - col);
-
-            const rank =
-                orientation === "w"
-                    ? 8 - row
-                    : row + 1;
-
-            const squareName =
-                file + rank;
-
-            const square =
-                document.createElement("div");
-
-            square.className =
-                "square " +
-                (((row + col) % 2 === 0)
-                    ? "light"
-                    : "dark");
-
-            square.dataset.square =
-                squareName;
-
-            const piece =
-                game.get(squareName);
-
-            if (piece) {
-
-                const pieceEl =
-                    document.createElement("div");
-
-                pieceEl.className =
-                    "piece";
-
-                pieceEl.textContent =
-                    pieceSymbols[piece.color][piece.type];
-
-                square.appendChild(pieceEl);
-            }
-
-            if (
-                lastMove &&
-                (
-                    lastMove.from === squareName ||
-                    lastMove.to === squareName
-                )
-            ) {
-
-                square.classList.add("lastmove");
-            }
-
-            if (
-                selectedSquare === squareName
-            ) {
-
-                square.classList.add("selected");
-            }
-
-            if (
-                legalTargets.includes(squareName)
-            ) {
-
-                if (game.get(squareName)) {
-
-                    const ring =
-                        document.createElement("div");
-
-                    ring.className =
-                        "capture-ring";
-
-                    square.appendChild(ring);
-
-                } else {
-
-                    const dot =
-                        document.createElement("div");
-
-                    dot.className =
-                        "move-dot";
-
-                    square.appendChild(dot);
-                }
-            }
-
-            square.addEventListener(
-                "pointerdown",
-                handlePointerDown
-            );
-
-            square.addEventListener(
-                "click",
-                handleClick
-            );
-
-            board.appendChild(square);
-        }
-    }
-
-    /*
-      Highlight king in check.
-    */
-
-    if (game.in_check()) {
-
-        const color =
-            game.turn();
-
-        for (const sq of allSquares()) {
-
-            const piece = game.get(sq);
-
-            if (
-                piece &&
-                piece.type === "k" &&
-                piece.color === color
-            ) {
-
-                const kingSquare =
-                    document.querySelector(
-                        `[data-square="${sq}"]`
-                    );
-
-                if (kingSquare) {
-                    kingSquare.classList.add("check");
-                }
-            }
-        }
-    }
-
-    updateMoves();
-    updateStatus();
+    justify-content:center;
 }
 
+.board{
+    width:min(94vw,680px);
 
-/* =========================
-   CLICK / TAP MOVE
-========================= */
+    height:min(94vw,680px);
 
-function handleClick(event) {
+    display:grid;
 
-    if (dragging || computerThinking) {
-        return;
-    }
+    grid-template-columns:
+        repeat(8,minmax(0,1fr));
 
-    const square =
-        event.currentTarget.dataset.square;
+    grid-template-rows:
+        repeat(8,minmax(0,1fr));
 
-    if (game.turn() !== "w") {
-        return;
-    }
+    overflow:hidden;
 
-    const piece =
-        game.get(square);
+    border-radius:12px;
 
-    if (!selectedSquare) {
+    background:#b58863;
 
-        if (
-            piece &&
-            piece.color === game.turn()
-        ) {
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.55);
 
-            selectSquare(square);
-        }
+    touch-action:none;
+}
 
-        return;
-    }
+.square{
+    position:relative;
 
-    if (legalTargets.includes(square)) {
+    width:100%;
+    height:100%;
 
-        tryPlayerMove(
-            selectedSquare,
-            square
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    user-select:none;
+
+    touch-action:none;
+}
+
+.light{
+    background:#f0d9b5;
+}
+
+.dark{
+    background:#b58863;
+}
+
+.square.lastmove{
+    background:#c8b04d;
+}
+
+.square.selected{
+    box-shadow:
+        inset 0 0 0 5px
+        rgba(255,215,0,.85);
+}
+
+.square.check{
+    background:#dc5050;
+}
+
+.piece{
+    position:relative;
+
+    z-index:3;
+
+    font-size:
+        clamp(34px,9.5vw,72px);
+
+    line-height:1;
+
+    pointer-events:none;
+
+    user-select:none;
+
+    text-shadow:
+        0 3px 3px rgba(0,0,0,.35);
+}
+
+.moveDot{
+    position:absolute;
+
+    z-index:2;
+
+    width:22%;
+    height:22%;
+
+    border-radius:50%;
+
+    background:
+        rgba(20,20,20,.35);
+}
+
+.captureRing{
+    position:absolute;
+
+    z-index:2;
+
+    width:78%;
+    height:78%;
+
+    border:
+        5px solid
+        rgba(20,20,20,.35);
+
+    border-radius:50%;
+}
+
+.dragPiece{
+    position:fixed;
+
+    z-index:99999;
+
+    pointer-events:none;
+
+    font-size:
+        clamp(42px,12vw,78px);
+
+    line-height:1;
+
+    transform:
+        translate(-50%,-50%)
+        scale(1.12);
+
+    filter:
+        drop-shadow(
+            0 12px 8px
+            rgba(0,0,0,.45)
         );
-
-        return;
-    }
-
-    if (
-        piece &&
-        piece.color === game.turn()
-    ) {
-
-        selectSquare(square);
-
-    } else {
-
-        clearSelection();
-    }
 }
 
 
 /* =========================
-   SELECT
+   MOVE PANEL
 ========================= */
 
-function selectSquare(square) {
+.movePanel{
+    max-width:680px;
 
-    selectedSquare = square;
+    margin:14px auto 0;
 
-    const moves =
-        game.moves({
-            square: square,
-            verbose: true
-        });
+    background:#151d29;
 
-    legalTargets =
-        moves.map(m => m.to);
+    border-radius:14px;
 
-    renderBoard();
+    overflow:hidden;
+}
+
+.moveTitle{
+    padding:15px 18px;
+
+    font-size:18px;
+
+    font-weight:bold;
+}
+
+.moves{
+    padding:
+        0 18px 15px;
+
+    max-height:150px;
+
+    overflow:auto;
+
+    color:#cbd5e1;
+
+    font-family:monospace;
+
+    line-height:1.7;
 }
 
 
 /* =========================
-   PLAYER MOVE
+   ENGINE STATUS
 ========================= */
 
-function tryPlayerMove(from, to) {
+.engineStatus{
+    text-align:center;
 
-    const move =
-        game.move({
-            from: from,
-            to: to,
-            promotion: "q"
-        });
+    color:#64748b;
 
-    if (!move) {
-        return;
-    }
+    font-size:12px;
 
-    lastMove = {
-        from: from,
-        to: to
-    };
-
-    clearSelection();
-
-    if (move.captured) {
-        playCaptureSound();
-    }
-
-    renderBoard();
-
-    if (!game.game_over()) {
-
-        setTimeout(() => {
-
-            if (game.turn() === "b") {
-                askComputer();
-            }
-
-        }, 300);
-
-    }
+    margin-top:8px;
 }
 
 
 /* =========================
-   DRAG SYSTEM
+   ONLINE SCREEN
 ========================= */
 
-function handlePointerDown(event) {
+.onlineBox{
+    max-width:600px;
 
-    if (computerThinking) {
-        return;
-    }
+    margin:auto;
 
-    if (game.turn() !== "w") {
-        return;
-    }
+    background:#121925;
 
-    const square =
-        event.currentTarget.dataset.square;
+    border:1px solid #273244;
 
-    const piece =
-        game.get(square);
+    border-radius:22px;
 
-    if (
-        !piece ||
-        piece.color !== game.turn()
-    ) {
-        return;
-    }
+    padding:30px;
 
-    event.preventDefault();
-
-    dragging = true;
-    dragFrom = square;
-
-    const moves =
-        game.moves({
-            square: square,
-            verbose: true
-        });
-
-    legalTargets =
-        moves.map(m => m.to);
-
-    selectedSquare = square;
-
-    const floating =
-        document.createElement("div");
-
-    floating.className =
-        "drag-piece";
-
-    floating.textContent =
-        pieceSymbols[piece.color][piece.type];
-
-    floating.style.left =
-        event.clientX + "px";
-
-    floating.style.top =
-        event.clientY + "px";
-
-    document.body.appendChild(floating);
-
-    dragPiece = floating;
-
-    renderBoard();
-
-    window.addEventListener(
-        "pointermove",
-        handlePointerMove
-    );
-
-    window.addEventListener(
-        "pointerup",
-        handlePointerUp,
-        { once: true }
-    );
+    text-align:center;
 }
 
+.onlineCode{
+    font-size:30px;
 
-function handlePointerMove(event) {
+    font-family:monospace;
 
-    if (!dragging || !dragPiece) {
-        return;
-    }
+    letter-spacing:5px;
 
-    dragPiece.style.left =
-        event.clientX + "px";
+    background:#0c121b;
 
-    dragPiece.style.top =
-        event.clientY + "px";
+    border-radius:12px;
+
+    padding:18px;
+
+    margin:20px 0;
+
+    color:#60a5fa;
 }
 
+.onlineInput{
+    width:100%;
 
-function handlePointerUp(event) {
+    height:52px;
 
-    if (!dragging) {
-        return;
-    }
+    border-radius:12px;
 
-    const target =
-        document.elementFromPoint(
-            event.clientX,
-            event.clientY
-        );
+    border:1px solid #334155;
 
-    const targetSquare =
-        target?.closest(".square");
+    background:#1b2432;
 
-    const to =
-        targetSquare?.dataset.square;
+    color:white;
 
-    const from =
-        dragFrom;
+    padding:0 15px;
 
-    dragging = false;
-
-    window.removeEventListener(
-        "pointermove",
-        handlePointerMove
-    );
-
-    if (
-        to &&
-        legalTargets.includes(to)
-    ) {
-
-        if (dragPiece) {
-            dragPiece.remove();
-        }
-
-        dragPiece = null;
-
-        tryPlayerMove(from, to);
-
-    } else {
-
-        animateDragBack(from);
-    }
+    font-size:16px;
 }
 
 
 /* =========================
-   DRAG RETURN
+   LEARN SCREEN
 ========================= */
 
-function animateDragBack(from) {
+.learnBox{
+    max-width:750px;
 
-    if (!dragPiece) {
-        clearSelection();
-        return;
-    }
+    margin:auto;
 
-    const square =
-        document.querySelector(
-            `[data-square="${from}"]`
-        );
+    background:#121925;
 
-    if (!square) {
+    border-radius:22px;
 
-        dragPiece.remove();
-        dragPiece = null;
-        clearSelection();
-        return;
-    }
+    border:1px solid #273244;
 
-    const rect =
-        square.getBoundingClientRect();
+    padding:28px;
+}
 
-    dragPiece.style.transition =
-        "all .16s ease";
+.lesson{
+    padding:18px;
 
-    dragPiece.style.left =
-        (rect.left + rect.width / 2) + "px";
+    background:#192230;
 
-    dragPiece.style.top =
-        (rect.top + rect.height / 2) + "px";
+    border-radius:14px;
 
-    setTimeout(() => {
+    margin-top:12px;
+}
 
-        if (dragPiece) {
-            dragPiece.remove();
-        }
+.lessonTitle{
+    font-weight:bold;
 
-        dragPiece = null;
+    font-size:17px;
+}
 
-        clearSelection();
+.lessonText{
+    color:#94a3b8;
 
-    }, 170);
+    margin-top:6px;
+
+    line-height:1.5;
 }
 
 
 /* =========================
-   CLEAR
+   MOBILE
 ========================= */
 
-function clearSelection() {
+@media(max-width:650px){
 
-    selectedSquare = null;
-    legalTargets = [];
+    .app{
+        padding:15px 10px 30px;
+    }
 
-    renderBoard();
+    .logo{
+        font-size:32px;
+    }
+
+    .subtitle{
+        font-size:14px;
+    }
+
+    .modes{
+        grid-template-columns:1fr;
+
+        gap:12px;
+    }
+
+    .mode{
+        min-height:145px;
+
+        padding:21px;
+    }
+
+    .modeIcon{
+        font-size:34px;
+
+        margin-bottom:12px;
+    }
+
+    .modeTitle{
+        font-size:21px;
+    }
+
+    .setup{
+        padding:22px;
+    }
+
+    .gameTitle{
+        font-size:17px;
+    }
+
 }
 
 
 /* =========================
-   MOVES
+   HIDDEN
 ========================= */
 
-function updateMoves() {
+.hidden{
+    display:none !important;
+}
 
-    let html = "";
+</style>
 
-    const history =
-        game.history();
+</head>
 
-    for (let i = 0; i < history.length; i += 2) {
 
-        const number =
-            
+<body>
+
+<div class="app">
+
+
+<!-- =================================
+     HOME
+================================= -->
+
+<div id="homeScreen">
+
+    <div class="header">
+
+        <div class="logo">
+            ♟ Chess Platform
+        </div>
+
+        <div class="subtitle">
+            Play chess • Improve your game • Have fun
+        </div>
+
+    </div>
+
+
+    <div class="modes">
+
+
+        <div
+            class="mode"
+            onclick="openComputerSetup()"
+        >
+
+            <div class="modeIcon">
+                🤖
+            </div>
+
+            <div class="modeTitle">
+                Play vs Computer
+            </div>
+
+            <div class="modeText">
+                Challenge Stockfish with
+                selectable playing levels.
+            </div>
+
+            <div class="modeArrow">
+                →
+            </div>
+
+        </div>
+
+
+        <div
+            class="mode"
+            onclick="openFriendSetup()"
+        >
+
+            <div class="modeIcon">
+                👥
+            </div>
+
+            <div class="modeTitle">
+                Play Friend
+            </div>
+
+            <div class="modeText">
+                Play chess with a friend
+                on the same device.
+            </div>
+
+            <div class="modeArrow">
+                →
+            </div>
+
+        </div>
+
+
+        <div
+            class="mode"
+            onclick="openOnline()"
+        >
+
+            <div class="modeIcon">
+                🌐
+            </div>
+
+            <div class="modeTitle">
+                Online Friend
+            </div>
+
+            <div class="modeText">
+                Create or join an online
+                chess room.
+            </div>
+
+            <div class="modeArrow">
+                →
+            </div>
+
+        </div>
+
+
+        <div
+            class="mode"
+            onclick="openLearn()"
+        >
+
+            <div class="modeIcon">
+                📚
+            </div>
+
+            <div class="modeTitle">
+                Learn Chess
+            </div>
+
+            <div class="modeText">
+                Study mistakes, tactics,
+                openings and positions.
+            </div>
+
+            <div class="modeArrow">
+                →
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =================================
+     COMPUTER SETUP
+================================= -->
+
+<div
+    id="computerSetup"
+    class="screen"
+>
+
+    <div class="setup">
+
+        <h2>
+            🤖 Play vs Computer
+        </h2>
+
+
+        <div class="option">
+
+            <label>
+                Computer Level
+            </label>
+
+            <select id="computerLevel">
+
+                <option value="800">
+                    800 Elo
+                </option>
+
+                <option value="1000">
+                    1000 Elo
+                </option>
+
+                <option value="1200">
+                    1200 Elo
+                </option>
+
+                <option value="1500" selected>
+                    1500 Elo
+                </option>
+
+                <option value="1800">
+                    1800 Elo
+                </option>
+
+                <option value="2000">
+                    2000 Elo
+                </option>
+
+                <option value="2200">
+                    2200 Elo
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="option">
+
+            <label>
+                Your Color
+            </label>
+
+            <select id="playerColor">
+
+                <option value="w">
+                    White
+                </option>
+
+                <option value="b">
+                    Black
+                </option>
+
+                <option value="random">
+                    Random
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="option">
+
+            <label>
+                Time Control
+            </label>
+
+            <select id="computerTime">
+
+                <option value="0">
+                    No Clock
+                </option>
+
+                <option value="180">
+                    3 + 0
+                </option>
+
+                <option value="300">
+                    5 + 0
+                </option>
+
+                <option value="600">
+                    10 + 0
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="buttons">
+
+            <button
+                class="secondary"
+                onclick="showHome()"
+            >
+                Back
+            </button>
+
+            <button
+                class="primary"
+                onclick="startComputerGame()"
+            >
+                Start Game
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =================================
+     FRIEND SETUP
+================================= -->
+
+<div
+    id="friendSetup"
+    class="screen"
+>
+
+    <div class="setup">
+
+        <h2>
+            👥 Play Friend
+        </h2>
+
+
+        <div class="option">
+
+            <label>
+                Time Control
+            </label>
+
+            <select id="friendTime">
+
+                <option value="0">
+                    No Clock
+                </option>
+
+                <option value="180">
+                    3 + 0
+                </option>
+
+                <option value="300">
+                    5 + 0
+                </option>
+
+                <option value="600">
+                    10 + 0
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="buttons">
+
+            <button
+                class="secondary"
+                onclick="showHome()"
+            >
+                Back
+            </button>
+
+            <button
+                class="primary"
+                onclick="startFriendGame()"
+            >
+                Start Game
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =================================
+     ONLINE
+================================= -->
+
+<div
+    id="onlineScreen"
+    class="screen"
+>
+
+    <div class="onlineBox">
+
+        <h2>
+            🌐 Online Chess
+        </h2>
+
+        <p style="color:#94a3b8">
+
+            Play against a friend using
+            a private room.
+
+        </p>
+
+
+        <button
+            class="primary"
+            onclick="createRoom()"
+            style="width:100%;margin-top:15px"
+        >
+            Create Room
+        </button>
+
+
+        <div id="roomArea">
+
+        </div>
+
+
+        <div
+            class="buttons"
+        >
+
+            <button
+                class="secondary"
+                onclick="showHome()"
+            >
+                Back
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =================================
+     LEARN
+================================= -->
+
+<div
+    id="learnScreen"
+    class="screen"
+>
+
+    <div class="learnBox">
+
+        <h2>
+            📚 Learn Chess
+        </h2>
+
+        <p style="color:#94a3b8">
+
+            After playing a game, your future
+            analysis system will show where
+            you can improve.
+
+        </p>
+
+
+        <div class="lesson">
+
+            <div class="lessonTitle">
+                🔥 Blunders
+            </div>
+
+            <div class="lessonText">
+                Find moves that lose material
+                or create serious problems.
+            </div>
+
+        </div>
+
+
+        <div class="lesson">
+
+            <div class="lessonTitle">
+                🎯 Missed Tactics
+            </div>
+
+            <div class="lessonText">
+                Discover missed checks,
+                captures and tactical opportunities.
+            </div>
+
+        </div>
+
+
+        <div class="lesson">
+
+            <div class="lessonTitle">
+                📖 Opening
+            </div>
+
+            <div class="lessonText">
+                Understand your opening and
+                where your game left theory.
+            </div>
+
+        </div>
+
+
+        <div class="lesson">
+
+            <div class="lessonTitle">
+                🧠 Personal Weaknesses
+            </div>
+
+            <div class="lessonText">
+                Future analysis will track
+                recurring mistakes and create
+                practice positions.
+            </div>
+
+        </div>
+
+
+        <div class="buttons">
+
+            <button
+                class="secondary"
+                onclick="showHome()"
+                style="width:100%"
+            >
+                Back to Home
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =================================
+     GAME
+================================= -->
+
+<div
+    id="gameScreen"
+    class="screen"
+>
+
+
+    <div class="gameHeader">
+
+        <button
+            class="backButton"
+            onclick="exitGame()"
+        >
+            ← Menu
+        </button>
+
+
+        <div
+            id="gameTitle"
+            class="gameTitle"
+        >
+            Chess
+        </div>
+
+
+        <button
+            class="backButton"
+            onclick="newGame()"
+        >
+            New
+        </button>
+
+    </div>
+
+
+    <div class="clocks">
+
+        <div class="clock">
+
+            <div class="clockName">
+                White
+            </div>
+
+            <div
+                id="whiteClock"
+                class="clockTime"
+            >
+                ∞
+            </div>
+
+        </div>
+
+
+        <div class="clock">
+
+            <div class="clockName">
+                Black
+            </div>
+
+            <div
+                id="blackClock"
+                class="clockTime"
+            >
+                ∞
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div
+        id="status"
+        class="status"
+    >
+        Your move
+    </div>
+
+
+    <div class="boardWrap">
+
+        <div
+            id="board"
+            class="board"
+        ></div>
+
+    </div>
+
+
+    <div
+        id="engineStatus"
+        class="engineStatus"
+    >
+        Loading engine...
+    </div>
+
+
+    <div class="movePanel">
+
+        <div class="moveTitle">
+            Moves
+        </div>
+
+        <div
+            id="moves"
+            class="moves"
+        ></div>
+
+    </div>
+
+
+</div>
+
+
+</div>
+
+
+
+<script>
+
+/* =========================================
+   GAME
+========================================= */
+
+const game =
+    new Chess();
+
+
+const board =
+    document.getElementById("board");
+
+const statusEl =
+    document.getElementById("status");
+
+const movesEl =
+    document.getElementById("moves");
+
+const engineStatus =
+    document.getElementById("engineStatus");
+
+
+/* =========================================
+   PIECES
+========================================= */
+
+const pieceSymbols = {
+
+    w:{
+        p:"♙",
+        n:"♘",
+        b:"♗",
+        r:"♖",
+        q:"♕",
+        k:"♔"
+    },
+
+    b:{
+        p:"♟",
+        n:"♞",
+        b:"♝",
+        r:"♜",
+        q:"♛",
+        k:"♚"
+    }
+
+};
+
+
+/* =========================================
+   VARIABLES
+========================================= */
+
+let mode = null;
+
+let playerColor = "w";
+
+let computerLevel = 1500;
+
+let selectedSquare = null;
+
+let legalTargets = [];
+
+let lastMove = null;
+
+let dragging = false;
+
+let dragFrom = null;
+
+let dragPiece = null;
+
+let computerThinking = false;
+
+let engine = null;
+
+let engineReady = false;
+
+let clockEnabled = false;
+
+let whiteTime = 0;
+
+let blackTime = 0;
+
+let clockInterval = null;
+
+
+/* =========================================
+   SCREEN MAN
