@@ -1,1510 +1,169 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Chess Platform</title>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-
 <style>
-*{
-    box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
-}
-
-html,body{
-    margin:0;
-    min-height:100%;
-    background:#080c13;
-    color:white;
-    font-family:Arial,Helvetica,sans-serif;
-}
-
-body{
-    min-height:100vh;
-}
-
-button,select{
-    font:inherit;
-}
-
-.app{
-    max-width:1100px;
-    margin:auto;
-    padding:20px;
-}
-
-/* HOME */
-
-.header{
-    text-align:center;
-    margin:25px 0 35px;
-}
-
-.logo{
-    font-size:42px;
-    font-weight:800;
-}
-
-.subtitle{
-    margin-top:8px;
-    color:#94a3b8;
-}
-
-.modes{
-    max-width:850px;
-    margin:auto;
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:18px;
-}
-
-.mode{
-    position:relative;
-    min-height:190px;
-    padding:25px;
-    border-radius:20px;
-    background:linear-gradient(145deg,#182130,#101722);
-    border:1px solid #283548;
-    cursor:pointer;
-    transition:.18s;
-}
-
-.mode:hover{
-    transform:translateY(-3px);
-    border-color:#3b82f6;
-}
-
-.mode:active{
-    transform:scale(.98);
-}
-
-.modeIcon{
-    font-size:42px;
-    margin-bottom:18px;
-}
-
-.modeTitle{
-    font-size:23px;
-    font-weight:700;
-}
-
-.modeText{
-    color:#94a3b8;
-    margin-top:8px;
-    line-height:1.5;
-}
-
-.modeArrow{
-    position:absolute;
-    right:20px;
-    bottom:18px;
-    color:#64748b;
-    font-size:25px;
-}
-
-/* SETUP */
-
-.screen{
-    display:none;
-}
-
-.setup{
-    max-width:600px;
-    margin:30px auto;
-    background:#121925;
-    border:1px solid #283548;
-    border-radius:22px;
-    padding:28px;
-}
-
-.setup h2{
-    margin-top:0;
-}
-
-.option{
-    margin-top:20px;
-}
-
-.option label{
-    display:block;
-    color:#94a3b8;
-    margin-bottom:8px;
-    font-size:14px;
-}
-
-select{
-    width:100%;
-    height:52px;
-    padding:0 14px;
-    border-radius:12px;
-    border:1px solid #334155;
-    background:#1b2432;
-    color:white;
-    outline:none;
-}
-
-.buttons{
-    display:flex;
-    gap:10px;
-    margin-top:25px;
-}
-
-.primary,
-.secondary{
-    height:52px;
-    border:0;
-    border-radius:12px;
-    cursor:pointer;
-}
-
-.primary{
-    flex:1;
-    background:#3b82f6;
-    color:white;
-    font-weight:700;
-}
-
-.secondary{
-    background:#202938;
-    color:#cbd5e1;
-    padding:0 20px;
-}
-
-/* GAME */
-
-.gameHeader{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:12px;
-}
-
-.gameTitle{
-    font-size:20px;
-    font-weight:bold;
-}
-
-.backButton{
-    border:0;
-    background:#202938;
-    color:#cbd5e1;
-    border-radius:10px;
-    padding:10px 14px;
-}
-
-.clocks{
-    display:flex;
-    gap:10px;
-    margin-bottom:8px;
-}
-
-.clock{
-    flex:1;
-    text-align:center;
-    padding:8px;
-    background:#151e2a;
-    border:1px solid #283548;
-    border-radius:10px;
-}
-
-.clockName{
-    color:#94a3b8;
-    font-size:12px;
-}
-
-.clockTime{
-    font-family:monospace;
-    font-size:24px;
-    margin-top:3px;
-}
-
-.status{
-    min-height:28px;
-    text-align:center;
-    margin:7px 0;
-    color:#cbd5e1;
-}
-
-.thinking{
-    color:#60a5fa;
-}
-
-.boardWrap{
-    width:100%;
-    display:flex;
-    justify-content:center;
-}
-
-.board{
-    width:min(94vw,680px);
-    height:min(94vw,680px);
-    display:grid;
-    grid-template-columns:repeat(8,1fr);
-    grid-template-rows:repeat(8,1fr);
-    overflow:hidden;
-    border-radius:12px;
-    box-shadow:0 20px 60px rgba(0,0,0,.55);
-    touch-action:none;
-}
-
-.square{
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    user-select:none;
-    touch-action:none;
-}
-
-.light{
-    background:#f0d9b5;
-}
-
-.dark{
-    background:#b58863;
-}
-
-.lastmove{
-    background:#c9b458!important;
-}
-
-.selected{
-    box-shadow:inset 0 0 0 5px rgba(255,215,0,.85);
-}
-
-.check{
-    background:#df4f4f!important;
-}
-
-.piece{
-    position:relative;
-    z-index:3;
-    pointer-events:none;
-    font-size:clamp(34px,9.5vw,72px);
-    line-height:1;
-    text-shadow:0 3px 3px rgba(0,0,0,.4);
-}
-
-.moveDot{
-    position:absolute;
-    z-index:2;
-    width:22%;
-    height:22%;
-    border-radius:50%;
-    background:rgba(0,0,0,.35);
-}
-
-.captureRing{
-    position:absolute;
-    z-index:2;
-    width:78%;
-    height:78%;
-    border:5px solid rgba(0,0,0,.35);
-    border-radius:50%;
-}
-
-.dragPiece{
-    position:fixed;
-    z-index:99999;
-    pointer-events:none;
-    font-size:clamp(42px,12vw,78px);
-    line-height:1;
-    transform:translate(-50%,-50%) scale(1.12);
-    filter:drop-shadow(0 12px 8px rgba(0,0,0,.45));
-}
-
-/* MOVES */
-
-.movePanel{
-    max-width:680px;
-    margin:14px auto 0;
-    background:#151d29;
-    border-radius:14px;
-    overflow:hidden;
-}
-
-.moveTitle{
-    padding:15px 18px;
-    font-size:18px;
-    font-weight:bold;
-}
-
-.moves{
-    padding:0 18px 15px;
-    max-height:150px;
-    overflow:auto;
-    color:#cbd5e1;
-    font-family:monospace;
-    line-height:1.7;
-}
-
-.engineStatus{
-    text-align:center;
-    color:#64748b;
-    font-size:12px;
-    margin:7px;
-}
-
-/* ONLINE / LEARN */
-
-.onlineBox,
-.learnBox{
-    max-width:650px;
-    margin:30px auto;
-    padding:28px;
-    background:#121925;
-    border:1px solid #283548;
-    border-radius:22px;
-}
-
-.onlineCode{
-    margin:20px 0;
-    padding:18px;
-    text-align:center;
-    font:30px monospace;
-    letter-spacing:5px;
-    background:#0b1119;
-    border-radius:12px;
-    color:#60a5fa;
-}
-
-.lesson{
-    padding:18px;
-    background:#192230;
-    border-radius:14px;
-    margin-top:12px;
-}
-
-.lessonTitle{
-    font-weight:bold;
-}
-
-.lessonText{
-    color:#94a3b8;
-    margin-top:6px;
-    line-height:1.5;
-}
-
-/* MOBILE */
-
-@media(max-width:650px){
-
-    .app{
-        padding:12px 10px 30px;
-    }
-
-    .logo{
-        font-size:32px;
-    }
-
-    .modes{
-        grid-template-columns:1fr;
-        gap:12px;
-    }
-
-    .mode{
-        min-height:145px;
-        padding:20px;
-    }
-
-    .modeIcon{
-        font-size:34px;
-        margin-bottom:10px;
-    }
-
-    .modeTitle{
-        font-size:21px;
-    }
-
-    .setup,
-    .onlineBox,
-    .learnBox{
-        padding:22px;
-    }
-}
+:root{--bg:#070b12;--panel:#101722;--panel2:#151e2c;--line:#273449;--text:#f5f7fb;--muted:#9ba8bc;--accent:#5da9ff;--good:#37d39b;--bad:#ff6577;--warn:#f6c85f;--sq1:#e8edf3;--sq2:#58708f;--light:#f7f8fa}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}button,select,input{font:inherit}button{cursor:pointer}
+.app{min-height:100vh}.topbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid #172131;background:rgba(7,11,18,.9);position:sticky;top:0;z-index:20;backdrop-filter:blur(14px)}
+.brand{font-weight:800;font-size:19px;display:flex;gap:10px;align-items:center}.brand span{font-size:25px}.top-actions{display:flex;gap:8px}.iconbtn,.ghost{border:1px solid var(--line);background:#0e1520;color:var(--text);border-radius:12px;padding:9px 12px}
+main{max-width:1180px;margin:auto;padding:28px 18px 50px}.hero{text-align:center;padding:28px 0 24px}.hero h1{font-size:clamp(34px,7vw,64px);margin:0 0 8px;letter-spacing:-2px}.hero p{margin:0;color:var(--muted);font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{border:1px solid var(--line);background:linear-gradient(145deg,#121b29,#0d141f);border-radius:22px;padding:26px;min-height:210px;transition:.18s;position:relative;overflow:hidden}.card:hover{transform:translateY(-2px);border-color:#426083}.card .emoji{font-size:44px}.card h2{margin:18px 0 8px;font-size:26px}.card p{color:var(--muted);line-height:1.5;margin:0 30px 0 0}.arrow{position:absolute;right:22px;bottom:24px;color:#8da0ba;font-size:28px}
+.page{display:none}.page.active{display:block}.panel{max-width:760px;margin:25px auto;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:25px}.panel h2{margin-top:0}.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}.field label{display:block;color:var(--muted);font-size:13px;margin-bottom:7px}.field select,.field input{width:100%;background:#0b111b;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px}.primary{border:0;background:linear-gradient(135deg,#3d8cff,#6db5ff);color:white;border-radius:13px;padding:13px 18px;font-weight:800}.danger{border:1px solid #70313b;background:#28151a;color:#ff9daa;border-radius:12px;padding:10px 14px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.space{justify-content:space-between}.hint{color:var(--muted);font-size:13px;line-height:1.5}.setup-preview{margin:18px 0;padding:16px;border:1px solid var(--line);border-radius:16px;background:#0c131d}.level-pill{display:inline-block;border:1px solid #365476;border-radius:999px;padding:5px 9px;color:#a9d0ff;font-size:12px;margin:3px}
+.game-layout{display:grid;grid-template-columns:minmax(0,680px) 330px;gap:18px;align-items:start}.board-wrap{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:14px}.board{width:min(78vw,650px);max-width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);border-radius:12px;overflow:hidden;box-shadow:0 20px 50px #0008;touch-action:none;user-select:none}.sq{position:relative;display:flex;align-items:center;justify-content:center;font-size:clamp(28px,7vw,58px);line-height:1}.sq.light{background:var(--sq1)}.sq.dark{background:var(--sq2)}.sq.selected{box-shadow:inset 0 0 0 4px #63b0ff}.sq.last{box-shadow:inset 0 0 0 999px #f5c54233}.sq.check{box-shadow:inset 0 0 0 999px #ff4f5f77}.dot{width:24%;height:24%;border-radius:50%;background:#24394d88;position:absolute}.capture{width:78%;height:78%;border:5px solid #24394d88;border-radius:50%;position:absolute}.piece{position:relative;z-index:2;font-family:"DejaVu Sans","Noto Sans Symbols 2",serif;text-shadow:0 2px 1px #0005}.drag-piece{position:fixed;z-index:999;pointer-events:none;font-size:58px;transform:translate(-50%,-50%) scale(1.08);filter:drop-shadow(0 12px 10px #0008)}.coords{position:absolute;font-size:9px;font-weight:800;opacity:.7}.filec{right:4px;bottom:2px}.rankc{left:4px;top:2px}.light .coords{color:#58708f}.dark .coords{color:#e8edf3}
+.clockbar{display:flex;justify-content:space-between;gap:10px;margin-bottom:12px}.clock{min-width:130px;background:#0a1018;border:1px solid var(--line);border-radius:14px;padding:9px 12px;text-align:center}.clock .name{font-size:12px;color:var(--muted)}.clock .time{font-variant-numeric:tabular-nums;font-size:25px;font-weight:850}.clock.active{border-color:#5da9ff;box-shadow:0 0 0 2px #5da9ff22}.side{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;min-height:400px}.status{padding:12px;border-radius:13px;background:#0b121c;border:1px solid var(--line);margin-bottom:12px}.moves{height:290px;overflow:auto;border:1px solid var(--line);border-radius:13px;background:#0b121c;padding:8px}.move{display:grid;grid-template-columns:36px 1fr 1fr;padding:7px;border-bottom:1px solid #172130}.move:last-child{border-bottom:0}.muted{color:var(--muted)}.game-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.game-buttons button{padding:10px;border:1px solid var(--line);border-radius:11px;background:#101925;color:var(--text)}
+.tabs{display:flex;gap:8px;margin-bottom:15px}.tab{padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#0c131d;color:var(--muted)}.tab.active{color:white;border-color:#4e7eb1}.lesson-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.lesson{padding:17px;border:1px solid var(--line);border-radius:16px;background:#0e1621}.lesson h3{margin:0 0 8px}.lesson p{color:var(--muted);font-size:14px;line-height:1.45}.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{padding:15px;border:1px solid var(--line);border-radius:14px;background:#0d1520}.stat b{font-size:24px}.analysis-row{padding:12px;border:1px solid var(--line);border-radius:13px;margin-bottom:8px}.tag{display:inline-block;font-size:11px;padding:3px 7px;border-radius:999px;background:#26384d;color:#b9d7f7;margin-right:6px}.tag.bad{background:#3b1d24;color:#ffabb5}.tag.good{background:#17382f;color:#8be5c3}.notice{padding:12px;border-radius:12px;background:#1c1820;border:1px solid #4b3d50;color:#d5cbe0;margin-bottom:12px}
+@media(max-width:850px){.grid,.game-layout{grid-template-columns:1fr}.game-layout{display:block}.side{margin-top:14px}.lesson-grid{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.board{width:min(94vw,650px)}main{padding:18px 12px 40px}.card{min-height:180px}.hero{padding-top:20px}.hero h1{font-size:40px}}
 </style>
 </head>
-
 <body>
-
 <div class="app">
+<header class="topbar">
+  <div class="brand"><span>♟</span> Chess Platform</div>
+  <div class="top-actions">
+    <button class="iconbtn" id="profileBtn">Profile</button>
+    <button class="iconbtn" id="menuBtn" style="display:none">Menu</button>
+  </div>
+</header>
 
-<!-- HOME -->
+<main>
+<section id="home" class="page active">
+  <div class="hero"><h1>Play. Improve. Compete.</h1><p>A complete chess playground powered by Stockfish.</p></div>
+  <div class="grid">
+    <div class="card" data-open="computer"><div class="emoji">🤖</div><h2>Play vs Computer</h2><p>Stockfish with selectable approximate strength from 800 to 2200+.</p><div class="arrow">→</div></div>
+    <div class="card" data-open="friend"><div class="emoji">👥</div><h2>Play Friend</h2><p>Two players, same device, with clocks and legal chess rules.</p><div class="arrow">→</div></div>
+    <div class="card" data-open="online"><div class="emoji">🌐</div><h2>Online Friend</h2><p>Room-based online mode interface, ready for a realtime backend.</p><div class="arrow">→</div></div>
+    <div class="card" data-open="learn"><div class="emoji">📚</div><h2>Learn Chess</h2><p>Lessons, game history, analysis and personalised practice tools.</p><div class="arrow">→</div></div>
+  </div>
+  <div class="panel" style="margin-top:18px"><div class="row space"><div><b>Local profile</b><div class="hint">Your rating and game history are stored on this device.</div></div><button class="ghost" id="homeProfile">Open profile</button></div></div>
+</section>
 
-<div id="homeScreen">
+<section id="computer" class="page">
+ <div class="panel">
+  <div class="row space"><h2>Play vs Computer</h2><button class="ghost back">← Back</button></div>
+  <div class="formgrid">
+   <div class="field"><label>Computer strength</label><select id="level">
+    <option value="800">800</option><option value="1000">1000</option><option value="1200">1200</option><option value="1500" selected>1500</option><option value="1800">1800</option><option value="2000">2000</option><option value="2200">2200+</option>
+   </select></div>
+   <div class="field"><label>Your colour</label><select id="color"><option value="w">White</option><option value="b">Black</option><option value="random">Random</option></select></div>
+   <div class="field"><label>Time control</label><select id="time"><option value="0">Unlimited</option><option value="60">1 + 0</option><option value="180">3 + 0</option><option value="300" selected>5 + 0</option><option value="600">10 + 0</option><option value="900">15 + 10</option></select></div>
+   <div class="field"><label>Thinking time</label><select id="think"><option value="fast">Fast</option><option value="natural" selected>Natural</option><option value="deep">Deep</option></select></div>
+  </div>
+  <div class="setup-preview"><b>Selected:</b> <span id="previewText">1500 • White • 5 + 0</span><p class="hint">The displayed Elo is an approximate target. Actual strength depends on browser/device and position.</p></div>
+  <div class="row"><button class="primary" id="startComputer">Start game</button></div>
+ </div>
+</section>
 
-<div class="header">
-    <div class="logo">♟ Chess Platform</div>
-    <div class="subtitle">
-        Play Chess • Improve • Compete
-    </div>
+<section id="friend" class="page">
+ <div class="panel">
+  <div class="row space"><h2>Play Friend</h2><button class="ghost back">← Back</button></div>
+  <div class="formgrid">
+   <div class="field"><label>Time control</label><select id="friendTime"><option value="0">Unlimited</option><option value="60">1 + 0</option><option value="180">3 + 0</option><option value="300" selected>5 + 0</option><option value="600">10 + 0</option><option value="900">15 + 10</option></select></div>
+   <div class="field"><label>Starting side</label><select id="friendColor"><option value="w">White first</option><option value="random">Random</option></select></div>
+  </div>
+  <div class="setup-preview"><b>Same-device game</b><p class="hint">Pass the device between players. All legal chess rules are enforced.</p></div>
+  <button class="primary" id="startFriend">Start game</button>
+ </div>
+</section>
+
+<section id="online" class="page">
+ <div class="panel">
+  <div class="row space"><h2>Online Friend</h2><button class="ghost back">← Back</button></div>
+  <div class="notice"><b>Online multiplayer note:</b> this static GitHub Pages build cannot securely synchronize two browsers by itself. The room UI below is functional locally; realtime cross-device play needs a small backend/WebRTC signalling layer.</div>
+  <div class="field"><label>Your room code</label><input id="roomCode" readonly></div>
+  <div class="row" style="margin-top:12px"><button class="primary" id="newRoom">Generate room</button><button class="ghost" id="copyRoom">Copy code</button></div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+  <div class="field"><label>Join a room</label><input id="joinCode" placeholder="Enter room code"></div>
+  <button class="ghost" id="joinRoom" style="margin-top:12px">Join room</button>
+  <p class="hint" id="onlineStatus" style="margin-top:15px"></p>
+ </div>
+</section>
+
+<section id="learn" class="page">
+ <div class="panel">
+  <div class="row space"><h2>Learn Chess</h2><button class="ghost back">← Back</button></div>
+  <div class="tabs"><button class="tab active" data-tab="lessons">Lessons</button><button class="tab" data-tab="history">My Games</button><button class="tab" data-tab="stats">Stats</button></div>
+  <div id="learn-lessons">
+   <div class="lesson-grid">
+    <div class="lesson"><h3>Opening principles</h3><p>Develop pieces, fight for the centre and castle early instead of moving the same piece repeatedly.</p></div>
+    <div class="lesson"><h3>Spot blunders</h3><p>Before every move ask: what checks, captures and threats does my opponent have?</p></div>
+    <div class="lesson"><h3>Tactics</h3><p>Train forks, pins, skewers, discovered attacks and basic mating patterns.</p></div>
+    <div class="lesson"><h3>Middlegame</h3><p>Compare king safety, activity, pawn structure and weak squares before choosing a plan.</p></div>
+    <div class="lesson"><h3>Endgame</h3><p>Learn king activity, opposition, passed pawns and basic rook endings.</p></div>
+    <div class="lesson"><h3>Game analysis</h3><p>After a game, use the analysis panel to inspect mistakes and candidate improvements.</p></div>
+   </div>
+  </div>
+  <div id="learn-history" style="display:none"></div>
+  <div id="learn-stats" style="display:none"></div>
+ </div>
+</section>
+
+<section id="profile" class="page">
+ <div class="panel">
+  <div class="row space"><h2>Profile</h2><button class="ghost back">← Back</button></div>
+  <div class="formgrid"><div class="field"><label>Display name</label><input id="profileName" placeholder="Chess Player"></div><div class="field"><label>Rating</label><input id="profileRating" type="number" min="400" max="3000"></div></div>
+  <button class="primary" id="saveProfile" style="margin-top:14px">Save profile</button>
+  <div id="profileStats" style="margin-top:18px"></div>
+ </div>
+</section>
+
+<section id="game" class="page">
+ <div class="game-layout">
+  <div>
+   <div class="clockbar">
+    <div class="clock" id="blackClock"><div class="name">Black</div><div class="time" id="bt">--:--</div></div>
+    <div class="clock" id="whiteClock"><div class="name">White</div><div class="time" id="wt">--:--</div></div>
+   </div>
+   <div class="board-wrap"><div id="board" class="board"></div></div>
+  </div>
+  <aside class="side">
+   <div class="status" id="status">Your move</div>
+   <div class="row space"><b>Moves</b><span class="muted" id="gameMeta"></span></div>
+   <div class="moves" id="moves"></div>
+   <div class="game-buttons"><button id="resign">Resign</button><button id="draw">Offer draw</button><button id="analyze">Analyze</button><button id="gameMenu">Menu</button></div>
+  </aside>
+ </div>
+</section>
+
+<section id="analysis" class="page">
+ <div class="panel">
+  <div class="row space"><h2>Game Analysis</h2><button class="ghost" id="analysisBack">← Back</button></div>
+  <div id="analysisSummary"></div>
+  <div id="analysisRows"></div>
+ </div>
+</section>
+</main>
 </div>
-
-<div class="modes">
-
-<div class="mode" onclick="openComputerSetup()">
-    <div class="modeIcon">🤖</div>
-    <div class="modeTitle">Play vs Computer</div>
-    <div class="modeText">
-        Play against Stockfish with different strength levels.
-    </div>
-    <div class="modeArrow">→</div>
-</div>
-
-<div class="mode" onclick="openFriendSetup()">
-    <div class="modeIcon">👥</div>
-    <div class="modeTitle">Play Friend</div>
-    <div class="modeText">
-        Two players can play on the same device.
-    </div>
-    <div class="modeArrow">→</div>
-</div>
-
-<div class="mode" onclick="openOnline()">
-    <div class="modeIcon">🌐</div>
-    <div class="modeTitle">Online Friend</div>
-    <div class="modeText">
-        Create a private room for online chess.
-    </div>
-    <div class="modeArrow">→</div>
-</div>
-
-<div class="mode" onclick="openLearn()">
-    <div class="modeIcon">📚</div>
-    <div class="modeTitle">Learn Chess</div>
-    <div class="modeText">
-        Analyse games, mistakes and tactics.
-    </div>
-    <div class="modeArrow">→</div>
-</div>
-
-</div>
-</div>
-
-
-<!-- COMPUTER SETUP -->
-
-<div id="computerSetup" class="screen">
-
-<div class="setup">
-
-<h2>🤖 Play vs Computer</h2>
-
-<div class="option">
-<label>Computer Level</label>
-
-<select id="computerLevel">
-
-<option value="800">800 Elo</option>
-<option value="1000">1000 Elo</option>
-<option value="1200">1200 Elo</option>
-<option value="1500" selected>1500 Elo</option>
-<option value="1800">1800 Elo</option>
-<option value="2000">2000 Elo</option>
-<option value="2200">2200 Elo</option>
-
-</select>
-</div>
-
-<div class="option">
-<label>Your Color</label>
-
-<select id="playerColor">
-
-<option value="w">White</option>
-<option value="b">Black</option>
-<option value="random">Random</option>
-
-</select>
-</div>
-
-<div class="option">
-<label>Time Control</label>
-
-<select id="computerTime">
-
-<option value="0">No Clock</option>
-<option value="180">3 + 0</option>
-<option value="300">5 + 0</option>
-<option value="600">10 + 0</option>
-
-</select>
-</div>
-
-<div class="buttons">
-
-<button class="secondary" onclick="showHome()">
-Back
-</button>
-
-<button class="primary" onclick="startComputerGame()">
-Start Game
-</button>
-
-</div>
-
-</div>
-</div>
-
-
-<!-- FRIEND SETUP -->
-
-<div id="friendSetup" class="screen">
-
-<div class="setup">
-
-<h2>👥 Play Friend</h2>
-
-<div class="option">
-<label>Time Control</label>
-
-<select id="friendTime">
-
-<option value="0">No Clock</option>
-<option value="180">3 + 0</option>
-<option value="300">5 + 0</option>
-<option value="600">10 + 0</option>
-
-</select>
-</div>
-
-<div class="buttons">
-
-<button class="secondary" onclick="showHome()">
-Back
-</button>
-
-<button class="primary" onclick="startFriendGame()">
-Start Game
-</button>
-
-</div>
-
-</div>
-</div>
-
-
-<!-- ONLINE -->
-
-<div id="onlineScreen" class="screen">
-
-<div class="onlineBox">
-
-<h2>🌐 Online Friend</h2>
-
-<p style="color:#94a3b8">
-Create a private room and share the room code.
-</p>
-
-<button
-class="primary"
-style="width:100%"
-onclick="createRoom()">
-Create Room
-</button>
-
-<div id="roomArea"></div>
-
-<div class="buttons">
-<button
-class="secondary"
-style="width:100%"
-onclick="showHome()">
-Back
-</button>
-</div>
-
-</div>
-</div>
-
-
-<!-- LEARN -->
-
-<div id="learnScreen" class="screen">
-
-<div class="learnBox">
-
-<h2>📚 Learn Chess</h2>
-
-<p style="color:#94a3b8">
-Your game-analysis system will use your completed games
-to identify mistakes and learning opportunities.
-</p>
-
-<div class="lesson">
-<div class="lessonTitle">🔥 Blunders</div>
-<div class="lessonText">
-Find moves that lose material or create serious threats.
-</div>
-</div>
-
-<div class="lesson">
-<div class="lessonTitle">🎯 Missed Tactics</div>
-<div class="lessonText">
-Find missed checks, captures, mates and tactical moves.
-</div>
-</div>
-
-<div class="lesson">
-<div class="lessonTitle">📖 Opening</div>
-<div class="lessonText">
-Track your opening and identify where you left known lines.
-</div>
-</div>
-
-<div class="lesson">
-<div class="lessonTitle">🧠 Personal Improvement</div>
-<div class="lessonText">
-Track recurring mistakes and eventually generate practice puzzles.
-</div>
-</div>
-
-<div class="buttons">
-<button
-class="secondary"
-style="width:100%"
-onclick="showHome()">
-Back
-</button>
-</div>
-
-</div>
-</div>
-
-
-<!-- GAME -->
-
-<div id="gameScreen" class="screen">
-
-<div class="gameHeader">
-
-<button class="backButton" onclick="exitGame()">
-← Menu
-</button>
-
-<div id="gameTitle" class="gameTitle">
-Chess
-</div>
-
-<button class="backButton" onclick="newGame()">
-New
-</button>
-
-</div>
-
-<div class="clocks">
-
-<div class="clock">
-<div class="clockName">White</div>
-<div id="whiteClock" class="clockTime">∞</div>
-</div>
-
-<div class="clock">
-<div class="clockName">Black</div>
-<div id="blackClock" class="clockTime">∞</div>
-</div>
-
-</div>
-
-<div id="status" class="status">
-Your move
-</div>
-
-<div class="boardWrap">
-<div id="board" class="board"></div>
-</div>
-
-<div id="engineStatus" class="engineStatus">
-Loading Stockfish...
-</div>
-
-<div class="movePanel">
-
-<div class="moveTitle">
-Moves
-</div>
-
-<div id="moves" class="moves"></div>
-
-</div>
-
-</div>
-
-</div>
-
 
 <script>
-
-/* ================================
-   CHESS
-================================ */
-
-const game = new Chess();
-
-const board = document.getElementById("board");
-
-const statusEl =
-document.getElementById("status");
-
-const movesEl =
-document.getElementById("moves");
-
-const engineStatus =
-document.getElementById("engineStatus");
-
-
-const pieces = {
-
-w:{
-p:"♙",
-n:"♘",
-b:"♗",
-r:"♖",
-q:"♕",
-k:"♔"
-},
-
-b:{
-p:"♟",
-n:"♞",
-b:"♝",
-r:"♜",
-q:"♛",
-k:"♚"
-}
-
-};
-
-
-/* ================================
-   STATE
-================================ */
-
-let mode = null;
-
-let playerColor = "w";
-
-let computerLevel = 1500;
-
-let selected = null;
-
-let legalTargets = [];
-
-let lastMove = null;
-
-let dragging = false;
-
-let dragFrom = null;
-
-let floatingPiece = null;
-
-let computerThinking = false;
-
-let engine = null;
-
-let engineReady = false;
-
-let clockEnabled = false;
-
-let whiteTime = 0;
-
-let blackTime = 0;
-
-let clockInterval = null;
-
-
-/* ================================
-   SCREENS
-================================ */
-
-function hideScreens(){
-
-document.getElementById("homeScreen").style.display="none";
-document.getElementById("computerSetup").style.display="none";
-document.getElementById("friendSetup").style.display="none";
-document.getElementById("onlineScreen").style.display="none";
-document.getElementById("learnScreen").style.display="none";
-document.getElementById("gameScreen").style.display="none";
-
-}
-
-
-function showHome(){
-
-hideScreens();
-
-document.getElementById("homeScreen").style.display="block";
-
-}
-
-
-function openComputerSetup(){
-
-hideScreens();
-
-document.getElementById("computerSetup").style.display="block";
-
-}
-
-
-function openFriendSetup(){
-
-hideScreens();
-
-document.getElementById("friendSetup").style.display="block";
-
-}
-
-
-function openOnline(){
-
-hideScreens();
-
-document.getElementById("onlineScreen").style.display="block";
-
-}
-
-
-function openLearn(){
-
-hideScreens();
-
-document.getElementById("learnScreen").style.display="block";
-
-}
-
-
-/* ================================
-   START COMPUTER
-================================ */
-
-function startComputerGame(){
-
-mode="computer";
-
-computerLevel =
-Number(
-document.getElementById("computerLevel").value
-);
-
-const selectedColor =
-document.getElementById("playerColor").value;
-
-if(selectedColor==="random"){
-
-playerColor =
-Math.random()<0.5 ? "w" : "b";
-
-}else{
-
-playerColor=selectedColor;
-
-}
-
-const time =
-Number(
-document.getElementById("computerTime").value
-);
-
-setupGame(time);
-
-document.getElementById("gameTitle").textContent =
-"🤖 vs Computer";
-
-hideScreens();
-
-document.getElementById("gameScreen").style.display="block";
-
-renderBoard();
-
-if(playerColor==="b"){
-
-setTimeout(computerMove,700);
-
-}
-
-}
-
-
-/* ================================
-   START FRIEND
-================================ */
-
-function startFriendGame(){
-
-mode="friend";
-
-playerColor="w";
-
-const time =
-Number(
-document.getElementById("friendTime").value
-);
-
-setupGame(time);
-
-document.getElementById("gameTitle").textContent =
-"👥 Local Friend";
-
-hideScreens();
-
-document.getElementById("gameScreen").style.display="block";
-
-renderBoard();
-
-}
-
-
-/* ================================
-   SETUP
-================================ */
-
-function setupGame(time){
-
-game.reset();
-
-selected=null;
-
-legalTargets=[];
-
-lastMove=null;
-
-computerThinking=false;
-
-clockEnabled=time>0;
-
-whiteTime=time;
-
-blackTime=time;
-
-stopClock();
-
-updateClocks();
-
-if(clockEnabled){
-
-startClock();
-
-}
-
-}
-
-
-/* ================================
-   BOARD
-================================ */
-
-function renderBoard(){
-
-board.innerHTML="";
-
-let files=["a","b","c","d","e","f","g","h"];
-
-let ranks=[8,7,6,5,4,3,2,1];
-
-if(playerColor==="b"){
-
-files.reverse();
-ranks.reverse();
-
-}
-
-
-for(let row=0;row<8;row++){
-
-for(let col=0;col<8;col++){
-
-const squareName =
-files[col]+ranks[row];
-
-const square =
-document.createElement("div");
-
-square.className =
-"square "+
-(
-(row+col)%2===0
-?"light"
-:"dark"
-);
-
-square.dataset.square=squareName;
-
-
-const piece =
-game.get(squareName);
-
-if(piece){
-
-const p =
-document.createElement("div");
-
-p.className="piece";
-
-p.textContent =
-pieces[piece.color][piece.type];
-
-square.appendChild(p);
-
-}
-
-
-if(
-lastMove &&
-(
-lastMove.from===squareName ||
-lastMove.to===squareName
-)
-){
-
-square.classList.add("lastmove");
-
-}
-
-
-if(selected===squareName){
-
-square.classList.add("selected");
-
-}
-
-
-if(legalTargets.includes(squareName)){
-
-if(game.get(squareName)){
-
-const ring =
-document.createElement("div");
-
-ring.className="captureRing";
-
-square.appendChild(ring);
-
-}else{
-
-const dot =
-document.createElement("div");
-
-dot.className="moveDot";
-
-square.appendChild(dot);
-
-}
-
-}
-
-
-square.addEventListener(
-"pointerdown",
-pointerDown
-);
-
-square.addEventListener(
-"click",
-clickSquare
-);
-
-board.appendChild(square);
-
-}
-
-}
-
-
-/* CHECK */
-
-if(game.in_check()){
-
-for(const sq of allSquares()){
-
-const p=game.get(sq);
-
-if(
-p &&
-p.type==="k" &&
-p.color===game.turn()
-){
-
-const el =
-document.querySelector(
-`[data-square="${sq}"]`
-);
-
-if(el){
-
-el.classList.add("check");
-
-}
-
-}
-
-}
-
-}
-
-
-updateMoves();
-
-updateStatus();
-
-}
-
-
-/* ================================
-   CLICK MOVE
-================================ */
-
-function clickSquare(e){
-
-if(dragging || computerThinking)
-return;
-
-if(
-mode==="computer" &&
-game.turn()!==playerColor
-)
-return;
-
-const square =
-e.currentTarget.dataset.square;
-
-const piece =
-game.get(square);
-
-
-if(!selected){
-
-if(
-piece &&
-(
-mode==="friend" ||
-piece.color===playerColor
-)
-){
-
-selectSquare(square);
-
-}
-
-return;
-
-}
-
-
-if(legalTargets.includes(square)){
-
-makeMove(selected,square);
-
-return;
-
-}
-
-
-if(
-piece &&
-(
-mode==="friend" ||
-piece.color===game.turn()
-)
-){
-
-selectSquare(square);
-
-}else{
-
-clearSelection();
-
-}
-
-}
-
-
-/* ================================
-   SELECT
-================================ */
-
-function selectSquare(square){
-
-selected=square;
-
-legalTargets =
-game.moves({
-square:square,
-verbose:true
-}).map(m=>m.to);
-
-renderBoard();
-
-}
-
-
-/* ================================
-   MAKE MOVE
-================================ */
-
-function makeMove(from,to){
-
-const move =
-game.move({
-from:from,
-to:to,
-promotion:"q"
-});
-
-if(!move)
-return;
-
-lastMove={
-from:from,
-to:to
-};
-
-selected=null;
-
-legalTargets=[];
-
-if(move.captured)
-captureSound();
-
-renderBoard();
-
-if(game.game_over()){
-
-stopClock();
-
-return;
-
-}
-
-
-if(
-mode==="computer" &&
-game.turn()!==playerColor
-){
-
-setTimeout(
-computerMove,
-250
-);
-
-}
-
-}
-
-
-/* ================================
-   DRAG
-================================ */
-
-function pointerDown(e){
-
-if(computerThinking)
-return;
-
-if(
-mode==="computer" &&
-game.turn()!==playerColor
-)
-return;
-
-const square =
-e.currentTarget.dataset.square;
-
-const piece =
-game.get(square);
-
-if(!piece)
-return;
-
-if(
-mode==="computer" &&
-piece.color!==playerColor
-)
-return;
-
-if(
-mode==="friend" &&
-piece.color!==game.turn()
-)
-return;
-
-e.preventDefault();
-
-dragging=true;
-
-dragFrom=square;
-
-selected=square;
-
-legalTargets =
-game.moves({
-square:square,
-verbose:true
-}).map(m=>m.to);
-
-
-floatingPiece =
-document.createElement("div");
-
-floatingPiece.className="dragPiece";
-
-floatingPiece.textContent =
-pieces[piece.color][piece.type];
-
-floatingPiece.style.left =
-e.clientX+"px";
-
-floatingPiece.style.top =
-e.clientY+"px";
-
-document.body.appendChild(
-floatingPiece
-);
-
-renderBoard();
-
-window.addEventListener(
-"pointermove",
-pointerMove
-);
-
-window.addEventListener(
-"pointerup",
-pointerUp,
-{once:true}
-);
-
-}
-
-
-function pointerMove(e){
-
-if(!dragging || !floatingPiece)
-return;
-
-floatingPiece.style.left =
-e.clientX+"px";
-
-floatingPiece.style.top =
-e.clientY+"px";
-
-}
-
-
-function pointerUp(e){
-
-if(!dragging)
-return;
-
-const target =
-document.elementFromPoint(
-e.clientX,
-e.clientY
-);
-
-const square =
-target?.closest(".square");
-
-const to =
-square?.dataset.square;
-
-const from=dragFrom;
-
-dragging=false;
-
-window.removeEventListener(
-"pointermove",
-pointerMove
-);
-
-
-if(
-to &&
-legalTargets.includes(to)
-){
-
-floatingPiece.remove();
-
-floatingPiece=null;
-
-makeMove(from,to);
-
-}else{
-
-returnPiece(from);
-
-}
-
-}
-
-
-function returnPiece(from){
-
-if(!floatingPiece){
-
-clearSelection();
-
-return;
-
-}
-
-const square =
-document.querySelector(
-`[data-square="${from}"]`
-);
-
-if(!square){
-
-floatingPiece.remove();
-
-floatingPiece=null;
-
-clearSelection();
-
-return;
-
-}
-
-const rect =
-square.getBoundingClientRect();
-
-floatingPiece.style.transition =
-"all .16s ease";
-
-floatingPiece.style.left =
-(
-rect.left+
-rect.width/2
-)+"px";
-
-floatingPiece.style.top =
-(
-rect.top+
-rect.height/2
-)+"px";
-
-setTimeout(()=>{
-
-if(floatingPiece){
-
-floatingPiece.remove();
-
-}
-
-floatingPiece=null;
-
-clearSelection();
-
-},170);
-
-}
-
-
-/* ================================
-   STOCKFISH
-================================ */
-
-fu
+const PIECES={wp:"♙",wr:"♖",wn:"♘",wb:"♗",wq:"♕",wk:"♔",bp:"♟",br:"♜",bn:"♞",bb:"♝",bq:"♛",bk:"♚"};
+let game=new Chess(), mode="friend", playerColor="w", computerLevel=1500, timeSeconds=300, increment=0;
+let selected=null, drag=null, lastMove=null, gameOver=false, engine=null, engineReady=false, engineBusy=false, clockTimer=null, clocks={w:300,b:300}, activeClock=null;
+let sanMoves=[], positions=[], analysisResults=[], pendingAnalysisIndex=0;
+const $=id=>document.getElementById(id);
+function show(id){document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");$("menuBtn").style.display=id==="home"?"none":"block";window.scrollTo(0,0)}
+function fmt(t){if(t===null||t===undefined||t<0)return"00:00";let m=Math.floor(t/60),s=t%60;return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")}
+function profile(){return JSON.parse(localStorage.getItem("chessProfile")||'{"name":"Chess Player","rating":1200,"games":[]}')}
+function saveP(p){localStorage.setItem("chessProfile",JSON.stringify(p))}
+function stats(){let p=profile(),g=p.games||[];return{games:g.length,w:g.filter(x=>x.result==="win").length,l:g.filter(x=>x.result==="loss").length,d:g.filter(x=>x.result==="draw").length}}
+function refreshProfile(){let p=profile(),s=stats();$("profileName").value=p.name;$("profileRating").value=p.rating;$("profileStats").innerHTML='<div class="statgrid"><div class="stat"><div class="muted">Games</div><b>'+s.games+'</b></div><div class="stat"><div class="muted">Wins</div><b>'+s.w+'</b></div><div class="stat"><div class="muted">Losses</div><b>'+s.l+'</b></div></div>'}
+function refreshLearn(){let p=profile(),g=p.games||[],h=$("learn-history"),s=$("learn-stats");if(!g.length){h.innerHTML='<p class="hint">No games yet. Play a game and come back here.</p>'}else{h.innerHTML=g.slice().reverse().map((x,i)=>'<div class="analysis-row"><b>'+x.mode+'</b> · '+x.date+'<br><span class="tag">'+x.result+'</span><span class="muted">'+x.moves+' moves</span></div>').join("")}let st=stats();s.innerHTML='<div class="statgrid"><div class="stat"><div class="muted">Games</div><b>'+st.games+'</b></div><div class="stat"><div class="muted">Wins</div><b>'+st.w+'</b></div><div class="stat"><div class="muted">Draws</div><b>'+st.d+'</b></div></div>'}
+document.querySelectorAll(".card").forEach(c=>c.onclick=()=>{let id=c.dataset.open;show(id);if(id==="online")newRoom();if(id==="profile")refreshProfile()});
+document.querySelectorAll(".back").forEach(b=>b.onclick=()=>show("home"));
+$("menuBtn").onclick=()=>{stopGame();show("home")};$("profileBtn").onclick=()=>{refreshProfile();show("profile")};$("homeProfile").onclick=()=>{refreshProfile();show("profile")};
+$("saveProfile").onclick=()=>{let p=profile();p.name=$("profileName").value.trim()||"Chess Player";p.rating=Math.max(400,Math.min(3000,Number($("profileRating").value)||1200));saveP(p);alert("Profile saved")};
+function updatePreview(){let c=$("color").value;let col=c==="random"?"Random":c==="w"?"White":"Black";$("previewText").textContent=$("level").value+" • "+col+" • "+$("time").selectedOptions[0].text}
+$("level").onchange=updatePreview;$("color").onchange=updatePreview;$("time").onchange=updatePreview;
+function timeConfig(v){v=Number(v);if(v===900)return[900,10];return[v,0]}
+function startGame(newMode){mode=newMode;game=new Chess();selected=null;drag=null;lastMove=null;gameOver=false;sanMoves=[];positions=[];analysisResults=[];engineBusy=false;let cfg=timeConfig(timeSeconds);clocks={w:cfg[0],b:cfg[0]};activeClock=cfg[0]>0?"w":null;show("game");render();startClock();if(mode==="computer"&&playerColor==="b")setTimeout(engineMove,500)}
+$("startComputer").onclick=()=>{computerLevel=Number($("level").value);let c=$("color").value;playerColor=c==="random"?(Math.random()<.5?"w":"b"):c;timeSeconds=Number($("time").value);startGame("computer")};
+$("startFriend").onclick=()=>{let c=$("friendColor").value;playerColor=c==="random"?(Math.random()<.5?"w":"b"):"w";timeSeconds=Number($("friendTime").value);startGame("friend")};
+function boardOrientation(){return mode==="computer"&&playerColor==="b"?"b":"w"}
+function render(){renderBoard();renderMoves();renderStatus();updateClocks()}
+function renderBoard(){let b=$("board");b.innerHTML="";let ori=boardOrientation(),files=ori==="w"?["a","b","c","d","e","f","g","h"]:["h","g","f","e","d","c","b","a"],ranks=ori==="w"?[8,7,6,5,4,3,2,1]:[1,2,3,4,5,6,7,8];let legal=selected?game.moves({square:selected,verbose:true}):[];let legalMap={};legal.forEach(m=>legalMap[m.to]=m);
+for(let ri=0;ri<8;ri++)for(let fi=0;fi<8;fi++){let sq=files[fi]+ranks[ri],el=document.createElement("div");el.className="sq "+(((fi+ri)%2===0)?"light":"dark");el.dataset.sq=sq;if(lastMove&&(sq===lastMove.from||sq===lastMove.to))el.classList.add("last");if(selected===sq)el.classList.add("selected");if(game.in_check()&&game.get(sq)?.type==="k"&&game.get(sq)?.color===game.turn())el.classList.add("check");
+let p=game.get(sq);if(p){let sp=document.createElement("span");sp.className="piece";sp.textContent=PIECES[p.color+p.type];el.appendChild(sp)}
+if(legalMap[sq]){let mark=document.createElemen
